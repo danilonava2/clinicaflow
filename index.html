@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ClinicaFlow - Control de Ingresos</title>
+  <link rel="icon" type="image/png" href="attachments/favicon.png">
+  <link rel="stylesheet" href="styles.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<!-- PANTALLA DE LOGIN -->
+<div id="loginScreen" class="login-container">
+  <div class="login-card">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="attachments/logo-clinicaflow.png" alt="ClinicaFlow" style="max-width: 180px;">
+      <h2 style="color: #1e2937; margin-top: 10px;">ClinicaFlow</h2>
+      <p style="color: #64748b;">Control de Ingresos para Profesionales</p>
+    </div>
+    
+    <div id="loginForm">
+      <div class="form-group">
+        <label>📧 Correo electrónico</label>
+        <input type="email" id="loginEmail" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label>🔒 Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button onclick="login()" class="btn-primary btn-block">Iniciar Sesión</button>
+      <p style="text-align: center; margin-top: 10px;">
+        <a href="#" onclick="mostrarRegistro()">¿No tienes cuenta? Regístrate</a>
+      </p>
+      <p style="text-align: center;">
+        <a href="#" onclick="resetPassword()" style="color: #f59e0b; font-size: 13px;">¿Olvidaste tu contraseña?</a>
+      </p>
+    </div>
+
+    <div id="registerForm" style="display: none;">
+      <div class="form-group">
+        <label>📧 Correo electrónico</label>
+        <input type="email" id="registerEmail" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label>🔒 Contraseña</label>
+        <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label>🔒 Confirmar contraseña</label>
+        <input type="password" id="registerConfirmPassword" placeholder="••••••••">
+      </div>
+      <button onclick="register()" class="btn-primary btn-block">Registrarse</button>
+      <p style="text-align: center; margin-top: 10px;">
+        <a href="#" onclick="mostrarLogin()">¿Ya tienes cuenta? Inicia Sesión</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="mainApp" class="app" style="display: none;">
+  
+  <!-- BARRA SUPERIOR MÓVIL -->
+  <div class="mobile-top-bar">
+    <div class="mobile-logo">
+      <img src="attachments/logo-clinicaflow.png" alt="ClinicaFlow" style="height: 35px; width: auto;">
+    </div>
+    <div class="mobile-stats-row">
+      <div class="mobile-user-info" id="mobileUserInfo"></div>
+      <div class="mobile-contador" id="mobileContadorRegistros">0 registros</div>
+    </div>
+    <div class="mobile-nav-row">
+      <div class="mobile-menu-buttons">
+        <button data-section="registrar" class="mobile-menu-btn">📋 Registrar</button>
+        <button data-section="buscar" class="mobile-menu-btn">🔍 Buscar</button>
+        <button data-section="dashboard" class="mobile-menu-btn">📊 Dashboard</button>
+        <button data-section="pagos" class="mobile-menu-btn">💰 Reportes</button>
+        <button data-section="centros" class="mobile-menu-btn">🏥 Centros</button>
+      </div>
+      <button class="mobile-config-icon" onclick="toggleConfigMenu()">⚙️</button>
+    </div>
+    <div id="configPanel" class="mobile-config-panel" style="display: none;">
+      <div class="mobile-menu-buttons mobile-secondary">
+        <button onclick="exportarBackup()" class="mobile-menu-btn backup-btn">⬇️ Backup</button>
+        <button onclick="document.getElementById('importFile').click()" class="mobile-menu-btn import-btn">⬆️ Restaurar</button>
+        <button onclick="limpiarTodo()" class="mobile-menu-btn clear-btn">🗑️ Limpiar</button>
+        <button onclick="logout()" class="mobile-menu-btn" style="background:#ef4444;">🚪 Cerrar Sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENÚ LATERAL PC -->
+  <div class="sidebar">
+    <div class="logo">
+      <div style="text-align: center; margin-bottom: 10px;">
+        <img src="attachments/logo-clinicaflow.png" alt="ClinicaFlow" style="max-width: 180px; height: auto;">
+      </div>
+      <p style="text-align: center; color: #94a3b8; font-size: 14px;">Control de Ingresos</p>
+      <p style="text-align: center; color: #60a5fa; font-size: 12px; margin-top: 5px;" id="userEmailDisplay"></p>
+    </div>
+    
+    <nav>
+      <a href="#" class="menu-item" data-section="registrar"><span>📋 Registrar</span></a>
+      <a href="#" class="menu-item" data-section="buscar"><span>🔍 Buscar</span></a>
+      <a href="#" class="menu-item" data-section="dashboard"><span>📊 Dashboard</span></a>
+      <a href="#" class="menu-item" data-section="pagos"><span>💰 Reportes</span></a>
+      <a href="#" class="menu-item" data-section="centros"><span>🏥 Centros</span></a>
+      
+      <div style="margin: 20px 0; padding: 12px; background:#1e40af; border-radius:8px; color:white; font-size:14px; text-align:center;">
+        <span id="contador-registros">0 registros</span>
+      </div>
+
+      <a href="#" onclick="exportarBackup()" class="menu-item" style="background:#8b5cf6;color:white;">⬇️ Exportar Backup</a>
+      <a href="#" onclick="document.getElementById('importFile').click()" class="menu-item" style="background:#f59e0b;color:white;">⬆️ Importar Backup</a>
+      <a href="#" onclick="limpiarTodo()" class="menu-item" style="margin-top:10px;background:#64748b;color:white;">🗑️ Limpiar Datos</a>
+      <a href="#" onclick="logout()" class="menu-item" style="margin-top:10px;background:#ef4444;color:white;">🚪 Cerrar Sesión</a>
+      
+      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importarBackup(event)">
+    </nav>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="main-content">
+    
+    <!-- SECCIÓN DE BIENVENIDA -->
+    <div id="section-welcome" class="section active">
+      <div class="welcome-container">
+        <div class="welcome-card">
+          <div class="welcome-logo">
+            <img src="attachments/logo-clinicaflow.png" alt="ClinicaFlow" style="max-width: 180px;">
+          </div>
+          <h2>Bienvenido a ClinicaFlow</h2>
+          <p class="welcome-subtitle">Tu control de ingresos profesional</p>
+          
+          <div class="welcome-features">
+            <div class="feature">
+              <div class="feature-icon">📋</div>
+              <div class="feature-text">
+                <h3>Registra tus atenciones</h3>
+                <p>Guarda cada atención con fecha, paciente, centro y monto</p>
+              </div>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">📊</div>
+              <div class="feature-text">
+                <h3>Visualiza tus ingresos</h3>
+                <p>Dashboard con gráficos de evolución mensual y por centro</p>
+              </div>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">💰</div>
+              <div class="feature-text">
+                <h3>Genera reportes profesionales</h3>
+                <p>Exporta tus datos a PDF o Excel con un solo clic</p>
+              </div>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">🏥</div>
+              <div class="feature-text">
+                <h3>Gestiona tus centros</h3>
+                <p>Agrega, edita o elimina los lugares donde atiendes</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="welcome-start">
+            <button onclick="seleccionarSeccion('registrar')" class="btn-primary">📋 Comenzar ahora</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGISTRAR ATENCIÓN -->
+    <div id="section-registrar" class="section">
+      <h2>📋 Nueva Atención</h2>
+      <div class="card">
+        <form id="formPaciente">
+          <div class="form-grid">
+            <div><label>📅 Fecha</label><input type="date" id="fecha" required></div>
+            <div><label>👤 Paciente</label><input type="text" id="nombre" required placeholder="Nombre completo"></div>
+            <div><label>🆔 RUT</label><input type="text" id="rut" placeholder="12.345.678-9" required></div>
+            <div><label>🏥 Centro de Atención</label>
+              <select id="selectInstitucion" required>
+                <option value="">-- Seleccionar centro --</option>
+              </select>
+              <small style="color:#666;">Puedes agregar centros en la sección "Centros"</small>
+            </div>
+            <div><label>💰 Monto ($)</label><input type="number" id="monto" placeholder="0" required></div>
+          </div>
+          <button type="submit" class="btn-primary" style="margin-top:15px;">✅ Registrar Atención</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- BUSCAR ATENCIONES -->
+    <div id="section-buscar" class="section">
+      <h2>🔍 Buscar Atenciones</h2>
+      <div class="card">
+        <div class="advanced-filters">
+          <div><label>📅 Desde</label><input type="date" id="busquedaFechaInicio"></div>
+          <div><label>📅 Hasta</label><input type="date" id="busquedaFechaFin"></div>
+          <div><label>👤 Paciente</label><input type="text" id="busquedaNombre" placeholder="Nombre"></div>
+          <div><label>🆔 RUT</label><input type="text" id="busquedaRut" placeholder="RUT"></div>
+          <div><label>🏥 Centro</label><select id="busquedaInstitucionSelect"><option value="">Todos los centros</option></select></div>
+          <button onclick="buscarPacientes()" class="btn-primary">🔍 Buscar</button>
+          <button onclick="limpiarFiltrosBusqueda()" class="btn-secondary">Limpiar</button>
+        </div>
+        <div id="resultados"></div>
+        <div id="paginacion" class="pagination-container"></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD DE INGRESOS -->
+    <div id="section-dashboard" class="section">
+      <h2>📊 Dashboard de Ingresos</h2>
+      <div class="card">
+        <div class="advanced-filters">
+          <div><label>📅 Desde</label><input type="date" id="dashFechaInicio"></div>
+          <div><label>📅 Hasta</label><input type="date" id="dashFechaFin"></div>
+          <button onclick="cargarDashboard()" class="btn-primary">Actualizar</button>
+        </div>
+        <div class="stats-cards" id="resumenStats">
+          <div class="stat-card"><div class="stat-icon">💰</div><div><span class="stat-label">Total Ingresos</span><span class="stat-value" id="totalIngresos">$0</span></div></div>
+          <div class="stat-card"><div class="stat-icon">👥</div><div><span class="stat-label">Atenciones</span><span class="stat-value" id="totalAtenciones">0</span></div></div>
+          <div class="stat-card"><div class="stat-icon">📊</div><div><span class="stat-label">Promedio</span><span class="stat-value" id="promedioAtencion">$0</span></div></div>
+          <div class="stat-card"><div class="stat-icon">🏆</div><div><span class="stat-label">Mejor Centro</span><span class="stat-value" id="mejorCentro">-</span></div></div>
+        </div>
+        <h3>📈 Evolución Mensual</h3>
+        <div class="charts-container">
+          <div class="chart-card"><canvas id="generalChart"></canvas></div>
+          <div class="chart-card"><canvas id="ingresosCentroChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTES FINANCIEROS -->
+    <div id="section-pagos" class="section">
+      <h2>💰 Reportes Financieros</h2>
+      <div class="card">
+        <div class="advanced-filters">
+          <div><label>📅 Desde</label><input type="date" id="fechaInicio"></div>
+          <div><label>📅 Hasta</label><input type="date" id="fechaFin"></div>
+          <div><label>👤 Paciente</label><input type="text" id="reporteNombre" placeholder="Nombre"></div>
+          <div><label>🆔 RUT</label><input type="text" id="reporteRut" placeholder="RUT"></div>
+          <div><label>🏥 Centro</label><select id="filtroInstitucionSelect"><option value="">Todos los centros</option></select></div>
+          <button onclick="generarReporte()" class="btn-primary">📄 Generar</button>
+          <button onclick="descargarExcel()" class="btn-secondary">📥 Excel</button>
+        </div>
+        <div id="reporteContainer"></div>
+      </div>
+    </div>
+
+    <!-- GESTIÓN DE CENTROS -->
+    <div id="section-centros" class="section">
+      <h2>🏥 Mis Centros de Atención</h2>
+      <div class="card">
+        <div class="form-grid">
+          <div><label>➕ Nuevo Centro</label><input type="text" id="nuevoCentro" placeholder="Ej: Clínica A"></div>
+          <div><button onclick="agregarCentro()" class="btn-primary">Agregar</button></div>
+        </div>
+        <div id="listaCentros"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALES -->
+<div id="successModal" class="modal"><div class="modal-content"><h2>✅ Atención Registrada</h2><button onclick="cerrarModal()" class="btn-primary">OK</button></div></div>
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Editar</h3>
+    <input type="hidden" id="editId">
+    <label>Fecha</label><input type="date" id="editFecha">
+    <label>Paciente</label><input type="text" id="editNombre">
+    <label>RUT</label><input type="text" id="editRut">
+    <label>Centro</label><select id="editSelectInstitucion"></select>
+    <label>Monto</label><input type="number" id="editMonto">
+    <div><button onclick="guardarEdicion()" class="btn-primary">Guardar</button><button onclick="cerrarEditModal()" class="btn-secondary">Cancelar</button></div>
+  </div>
+</div>
+<div id="confirmModal" class="modal"><div class="modal-content"><h3>⚠️ Confirmar</h3><p id="confirmMessage"></p><button onclick="confirmAction(true)" class="btn-primary">Sí</button><button onclick="confirmAction(false)" class="btn-secondary">No</button></div></div>
+<div id="duplicateWarningModal" class="modal">
+  <div class="modal-content">
+    <h2>⚠️ Paciente ya registrado</h2>
+    <div id="duplicateContent"></div>
+    <button onclick="registrarDuplicadoConfirmado()" class="btn-primary">✅ Sí, registrar</button>
+    <button onclick="cerrarModalDuplicado()" class="btn-secondary">❌ Cancelar</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
