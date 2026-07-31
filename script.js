@@ -933,16 +933,43 @@ function descargarReportePDF() {
 }
 
 
-// ==================== excel ====================
+// ==================== EXCEL CON FILTROS ====================
 function descargarExcel() {
-    const data = [["Fecha","Paciente","RUT","Centro","Monto"]];
+    // Obtener los mismos filtros que usa generarReporte()
+    const inicio = document.getElementById('fechaInicio').value;
+    const fin = document.getElementById('fechaFin').value;
+    const nombre = document.getElementById('reporteNombre').value.trim().toLowerCase();
+    const rut = document.getElementById('reporteRut').value.trim().toLowerCase();
+    const inst = document.getElementById('filtroInstitucionSelect').value;
     
-    pacientes.forEach(p => {
+    const start = inicio ? new Date(inicio) : null;
+    const end = fin ? new Date(fin) : null;
+    if (end) end.setHours(23, 59, 59);
+    
+    // Filtrar los datos igual que en generarReporte()
+    let filtered = pacientes.filter(p => {
+        const fecha = new Date(p.fecha);
+        const pasaFecha = !start || !end || (fecha >= start && fecha <= end);
+        const pasaNombre = !nombre || p.nombre.toLowerCase().includes(nombre);
+        const pasaRut = !rut || p.rut.toLowerCase().includes(rut);
+        const pasaInst = !inst || p.institucion === inst;
+        return pasaFecha && pasaNombre && pasaRut && pasaInst;
+    });
+    
+    if (filtered.length === 0) {
+        alert("No hay registros que coincidan con los filtros.");
+        return;
+    }
+    
+    // Preparar datos para Excel
+    const data = [["Fecha", "Paciente", "RUT", "Centro", "Monto"]];
+    
+    filtered.forEach(p => {
         data.push([
-            p.fecha, 
-            p.nombre, 
-            p.rut, 
-            p.institucion || "", 
+            p.fecha,
+            p.nombre,
+            p.rut,
+            p.institucion || "",
             Number(p.monto) || 0
         ]);
     });
