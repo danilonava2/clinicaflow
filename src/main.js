@@ -190,3 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('rut')?.addEventListener('input', (e) => formatearRutInput(e.target));
   document.getElementById('busquedaRut')?.addEventListener('input', (e) => formatearRutInput(e.target));
 });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((error) => {
+      console.error('Error al registrar el service worker:', error);
+    });
+  });
+}
