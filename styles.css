@@ -517,6 +517,51 @@ label {
   padding: 40px 20px;
   color: #94a3b8;
 }
+.reporte-desglose-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.reporte-desglose-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+}
+.reporte-desglose-card h4 {
+  margin: 0 0 10px 0;
+  color: #334155;
+  font-size: 14px;
+}
+.reporte-desglose-card .tabla-resultados { font-size: 13px; }
+.reporte-desglose-card .tabla-resultados th,
+.reporte-desglose-card .tabla-resultados td { padding: 6px 8px; }
+
+/* CALCULADORA DE DESCUENTOS */
+.descuento-linea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #475569;
+}
+.descuento-subtotal {
+  border-top: 1px dashed #cbd5e1;
+  border-bottom: 1px dashed #cbd5e1;
+  font-weight: 600;
+  color: #1e2937;
+}
+.descuento-final {
+  margin-top: 8px;
+  padding: 14px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 17px;
+  color: #16a34a;
+}
 
 /* CENTROS */
 .centros-grid {

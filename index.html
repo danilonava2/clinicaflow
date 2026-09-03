@@ -331,6 +331,40 @@
     <button onclick="cerrarModalDuplicado()" class="btn-secondary">❌ Cancelar</button>
   </div>
 </div>
+<div id="descuentosModal" class="modal">
+  <div class="modal-content">
+    <h3>🧮 Calcular Descuentos</h3>
+    <div class="descuento-linea">
+      <span>Total Ingresos</span>
+      <span id="descuentoTotalInicial">$0</span>
+    </div>
+    <div class="form-group">
+      <label>Primer descuento (%)</label>
+      <input type="number" id="descuentoPct1" min="0" max="100" step="0.01" placeholder="0" oninput="calcularDescuentos()">
+    </div>
+    <div class="descuento-linea">
+      <span>Monto descontado</span>
+      <span id="descuentoMonto1">$0</span>
+    </div>
+    <div class="descuento-linea descuento-subtotal">
+      <span>Subtotal</span>
+      <span id="descuentoSubtotal1">$0</span>
+    </div>
+    <div class="form-group">
+      <label>Segundo descuento (%)</label>
+      <input type="number" id="descuentoPct2" min="0" max="100" step="0.01" placeholder="0" oninput="calcularDescuentos()">
+    </div>
+    <div class="descuento-linea">
+      <span>Monto descontado</span>
+      <span id="descuentoMonto2">$0</span>
+    </div>
+    <div class="descuento-linea descuento-final">
+      <span>Total Final</span>
+      <span id="descuentoTotalFinal">$0</span>
+    </div>
+    <button onclick="cerrarDescuentosModal()" class="btn-secondary btn-block" style="margin-top:15px;">Cerrar</button>
+  </div>
+</div>
 
 <script type="module" src="./src/main.js"></script>
 </body>

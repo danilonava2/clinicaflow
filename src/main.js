@@ -29,7 +29,14 @@ import {
   autocompletarMontoPorPrevision
 } from './modules/pacientes.js';
 import { cargarDashboard } from './modules/dashboard.js';
-import { generarReporte, descargarReportePDF, descargarExcel } from './modules/reportes.js';
+import {
+  generarReporte,
+  descargarReportePDF,
+  descargarExcel,
+  abrirDescuentosModal,
+  cerrarDescuentosModal,
+  calcularDescuentos
+} from './modules/reportes.js';
 import { exportarBackup, importarBackup, limpiarTodo } from './modules/backup.js';
 import { cerrarModal, cerrarEditModal, cerrarModalDuplicado } from './ui/modals.js';
 
@@ -175,6 +182,9 @@ Object.assign(window, {
   generarReporte,
   descargarReportePDF,
   descargarExcel,
+  abrirDescuentosModal,
+  cerrarDescuentosModal,
+  calcularDescuentos,
   exportarBackup,
   importarBackup,
   limpiarTodo,
