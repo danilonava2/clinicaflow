@@ -338,9 +338,25 @@ label {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 .btn-primary { background: #3b82f6; color: white; }
 .btn-secondary { background: #64748b; color: white; }
+
+.btn-primary:hover, .btn-secondary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.btn-primary:active, .btn-secondary:active {
+  transform: scale(0.96);
+  filter: brightness(0.95);
+}
+
+.btn-edit, .btn-delete {
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.btn-edit:hover, .btn-delete:hover { filter: brightness(1.1); }
+.btn-edit:active, .btn-delete:active { transform: scale(0.9); }
 
 /* TABLA */
 .tabla-resultados {
@@ -422,6 +438,59 @@ label {
 .stat-icon { font-size: 32px; }
 .stat-label { font-size: 12px; color: #64748b; display: block; }
 .stat-value { font-size: 20px; font-weight: bold; color: #1e2937; display: block; }
+
+/* REPORTES */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reporte-resultado {
+  animation: fadeInUp 0.35s ease;
+}
+.reporte-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #e2e8f0;
+}
+.reporte-encabezado h3 {
+  color: #1e2937;
+  font-size: 19px;
+}
+.reporte-badge {
+  background: #eff6ff;
+  color: #1e40af;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.reporte-total {
+  margin: 22px 0;
+  padding: 22px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  text-align: center;
+  animation: fadeInUp 0.4s ease;
+}
+.reporte-total .monto {
+  font-size: 26px;
+  font-weight: 700;
+  color: #16a34a;
+  display: block;
+  margin-top: 4px;
+}
+.reporte-vacio {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
 
 /* CENTROS */
 .centros-grid {

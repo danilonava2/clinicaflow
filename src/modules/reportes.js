@@ -44,7 +44,7 @@ export function generarReporte(page = 1) {
   const paginacion = document.getElementById('reportePaginacion');
   if (!container) return;
   if (rows.length === 0) {
-    container.innerHTML = '<p>No se encontraron atenciones.</p>';
+    container.innerHTML = '<div class="reporte-vacio">📭 No se encontraron atenciones con estos filtros.</div>';
     if (paginacion) paginacion.innerHTML = '';
     return;
   }
@@ -54,8 +54,11 @@ export function generarReporte(page = 1) {
   const startIdx = (page - 1) * ITEMS_PER_PAGE;
   const paginated = rows.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
-  let html = `<h3>Reporte de Atenciones</h3>
-    <p><strong>Total atenciones:</strong> ${rows.length}</p>
+  let html = `<div class="reporte-resultado">
+    <div class="reporte-encabezado">
+      <h3>📄 Reporte de Atenciones</h3>
+      <span class="reporte-badge">${rows.length} atención${rows.length === 1 ? '' : 'es'} encontrada${rows.length === 1 ? '' : 's'}</span>
+    </div>
     <div style="overflow-x:auto;">
       <table class="tabla-resultados">
         <thead>
@@ -77,10 +80,12 @@ export function generarReporte(page = 1) {
   html += `</tbody>
       </table>
     </div>
-    <div style="margin:25px 0; padding:25px; background:#f0fdf4; border-radius:12px; text-align:center;">
-      <p><strong>Total Ingresos:</strong> ${formatearMonto(totalBruto)}</p>
+    <div class="reporte-total">
+      <span>💰 Total Ingresos</span>
+      <span class="monto">${formatearMonto(totalBruto)}</span>
     </div>
-    <button onclick="descargarReportePDF()" class="btn-primary">📄 Descargar PDF</button>`;
+    <button onclick="descargarReportePDF()" class="btn-primary">📄 Descargar PDF</button>
+  </div>`;
 
   container.innerHTML = html;
 
