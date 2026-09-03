@@ -244,6 +244,8 @@
         <div class="advanced-filters">
           <div><label>📅 Desde</label><input type="date" id="dashFechaInicio"></div>
           <div><label>📅 Hasta</label><input type="date" id="dashFechaFin"></div>
+          <div><label>🏥 Centro</label><select id="dashInstitucionSelect"><option value="">Todos los centros</option></select></div>
+          <div><label>🩺 Previsión</label><select id="dashPrevisionSelect"><option value="">Todas las previsiones</option></select></div>
           <button onclick="cargarDashboard()" class="btn-primary">Actualizar</button>
         </div>
         <div class="stats-cards" id="resumenStats">
@@ -252,10 +254,23 @@
           <div class="stat-card"><div class="stat-icon">📊</div><div><span class="stat-label">Promedio</span><span class="stat-value" id="promedioAtencion">$0</span></div></div>
           <div class="stat-card"><div class="stat-icon">🏆</div><div><span class="stat-label">Mejor Centro</span><span class="stat-value" id="mejorCentro">-</span></div></div>
         </div>
-        <h3>📈 Evolución Mensual</h3>
         <div class="charts-container">
-          <div class="chart-card"><canvas id="generalChart"></canvas></div>
-          <div class="chart-card"><canvas id="ingresosCentroChart"></canvas></div>
+          <div class="chart-card">
+            <h4>📈 Ingresos mensuales</h4>
+            <div class="chart-canvas-wrap"><canvas id="ingresosChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h4>👥 Atenciones mensuales</h4>
+            <div class="chart-canvas-wrap"><canvas id="atencionesChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h4>🏥 Ingresos por Centro</h4>
+            <div class="chart-canvas-wrap"><canvas id="ingresosCentroChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h4>🩺 Ingresos por Previsión</h4>
+            <div class="chart-canvas-wrap"><canvas id="ingresosPrevisionChart"></canvas></div>
+          </div>
         </div>
       </div>
     </div>

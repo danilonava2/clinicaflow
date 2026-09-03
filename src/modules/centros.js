@@ -69,6 +69,7 @@ export function editarCentro(index) {
   guardarDatos();
   renderListaCentros();
   actualizarSelectCentros();
+  actualizarSelectPrevisionDashboard();
   alert(`Centro "${nombreAnterior}" → "${nuevoNombre}"\nSe actualizaron ${registrosActualizados} registro(s)`);
   if (document.getElementById('section-dashboard').classList.contains('active')) cargarDashboard();
   if (document.getElementById('section-buscar').classList.contains('active')) buscarPacientes();
@@ -85,6 +86,7 @@ export function eliminarCentro(index) {
     guardarDatos();
     renderListaCentros();
     actualizarSelectCentros();
+    actualizarSelectPrevisionDashboard();
     alert(`Centro "${centro.nombre}" eliminado. Los registros conservan el nombre.`);
   } else if (opcion === '2') {
     if (confirm(`¿Eliminar ${cantidad} registro(s)?`)) {
@@ -93,6 +95,7 @@ export function eliminarCentro(index) {
       guardarDatos();
       renderListaCentros();
       actualizarSelectCentros();
+      actualizarSelectPrevisionDashboard();
       alert(`Se eliminaron ${cantidad} registro(s) y el centro.`);
       if (document.getElementById('section-dashboard').classList.contains('active')) cargarDashboard();
       if (document.getElementById('section-buscar').classList.contains('active')) buscarPacientes(1);
@@ -115,6 +118,7 @@ export function eliminarCentro(index) {
       guardarDatos();
       renderListaCentros();
       actualizarSelectCentros();
+      actualizarSelectPrevisionDashboard();
       alert(`${cantidad} registro(s) reasignados a "${nuevo.nombre}"`);
       if (document.getElementById('section-dashboard').classList.contains('active')) cargarDashboard();
       if (document.getElementById('section-buscar').classList.contains('active')) buscarPacientes(1);
@@ -158,6 +162,7 @@ export function agregarPrevision(centroIndex) {
   centro.previsiones.push({ nombre, monto });
   guardarDatos();
   renderListaCentros();
+  actualizarSelectPrevisionDashboard();
 }
 
 export function editarPrevision(centroIndex, previsionIndex) {
@@ -170,6 +175,7 @@ export function editarPrevision(centroIndex, previsionIndex) {
   prevision.monto = parseInt(nuevoMontoStr) || 0;
   guardarDatos();
   renderListaCentros();
+  actualizarSelectPrevisionDashboard();
 }
 
 export function eliminarPrevision(centroIndex, previsionIndex) {
@@ -179,6 +185,7 @@ export function eliminarPrevision(centroIndex, previsionIndex) {
   centro.previsiones.splice(previsionIndex, 1);
   guardarDatos();
   renderListaCentros();
+  actualizarSelectPrevisionDashboard();
 }
 
 export function actualizarSelectCentros() {
@@ -186,7 +193,8 @@ export function actualizarSelectCentros() {
     document.getElementById('selectInstitucion'),
     document.getElementById('busquedaInstitucionSelect'),
     document.getElementById('filtroInstitucionSelect'),
-    document.getElementById('editSelectInstitucion')
+    document.getElementById('editSelectInstitucion'),
+    document.getElementById('dashInstitucionSelect')
   ];
   selects.forEach((select) => {
     if (!select) return;
@@ -224,6 +232,35 @@ export function actualizarSelectCentros() {
     }
     rep.value = '';
   }
+
+  const dash = document.getElementById('dashInstitucionSelect');
+  if (dash) {
+    let all = dash.querySelector('option[value=""]');
+    if (!all) {
+      all = document.createElement('option');
+      all.value = '';
+      all.textContent = 'Todos los centros';
+      dash.insertBefore(all, dash.firstChild);
+    }
+    dash.value = '';
+  }
+}
+
+export function actualizarSelectPrevisionDashboard() {
+  const select = document.getElementById('dashPrevisionSelect');
+  if (!select) return;
+  const nombres = new Set();
+  state.centros.forEach((c) => c.previsiones.forEach((p) => nombres.add(p.nombre)));
+  select.innerHTML = '<option value="">Todas las previsiones</option>';
+  Array.from(nombres)
+    .sort()
+    .forEach((nombre) => {
+      const opt = document.createElement('option');
+      opt.value = nombre;
+      opt.textContent = nombre;
+      select.appendChild(opt);
+    });
+  select.value = '';
 }
 
 export function migrarCentrosDesdePacientes() {

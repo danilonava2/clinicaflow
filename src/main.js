@@ -7,6 +7,7 @@ import { confirmAction } from './ui/modals.js';
 import {
   renderListaCentros,
   actualizarSelectCentros,
+  actualizarSelectPrevisionDashboard,
   migrarCentrosDesdePacientes,
   agregarCentro,
   editarCentro,
@@ -65,6 +66,7 @@ async function onSesionIniciada(user) {
 
   renderListaCentros();
   actualizarSelectCentros();
+  actualizarSelectPrevisionDashboard();
   migrarCentrosDesdePacientes();
   actualizarContador();
   setupNavigation();

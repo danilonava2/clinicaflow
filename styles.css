@@ -420,6 +420,32 @@ label {
 }
 .chart-container canvas { max-width: 100%; height: auto !important; }
 
+/* GRILLA DE GRAFICOS DEL DASHBOARD */
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+.chart-card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  border: 1px solid #eef0f3;
+}
+.chart-card h4 {
+  margin: 0 0 14px 0;
+  color: #334155;
+  font-size: 15px;
+  font-weight: 600;
+}
+.chart-canvas-wrap {
+  position: relative;
+  height: 260px;
+}
+.chart-canvas-wrap canvas { max-width: 100%; }
+
 /* TARJETAS DE ESTADÍSTICAS */
 .stats-cards {
   display: grid;
@@ -561,6 +587,7 @@ label {
   .stat-value { font-size: 18px; }
   .charts-container { display: flex; flex-direction: column; gap: 15px; }
   .chart-card { margin-bottom: 15px; }
+  .chart-canvas-wrap { height: 220px; }
   .chart-container canvas { max-height: 220px; width: 100% !important; }
   .centros-grid { grid-template-columns: 1fr; }
   .login-card { padding: 30px 20px; }
