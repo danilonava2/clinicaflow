@@ -21,6 +21,42 @@ export function actualizarContador() {
   if (mobileContador) mobileContador.innerHTML = `${count} registros`;
 }
 
+export function actualizarPrevisionesDisponibles(selectCentroId, selectPrevisionId) {
+  const centroNombre = document.getElementById(selectCentroId).value;
+  const previsionSelect = document.getElementById(selectPrevisionId);
+  const centro = state.centros.find((c) => c.nombre === centroNombre);
+  const previsiones = centro?.previsiones || [];
+
+  if (!centroNombre) {
+    previsionSelect.innerHTML = '<option value="">-- Selecciona un centro primero --</option>';
+    previsionSelect.disabled = true;
+    return;
+  }
+  if (previsiones.length === 0) {
+    previsionSelect.innerHTML = '<option value="">-- Sin previsiones, agrega en "Centros" --</option>';
+    previsionSelect.disabled = true;
+    return;
+  }
+  previsionSelect.disabled = false;
+  previsionSelect.innerHTML = '<option value="">-- Seleccionar previsión --</option>';
+  previsiones.forEach((p) => {
+    const opt = document.createElement('option');
+    opt.value = p.nombre;
+    opt.textContent = p.nombre;
+    previsionSelect.appendChild(opt);
+  });
+}
+
+export function autocompletarMontoPorPrevision(selectCentroId, selectPrevisionId, montoInputId) {
+  const centroNombre = document.getElementById(selectCentroId).value;
+  const previsionNombre = document.getElementById(selectPrevisionId).value;
+  const centro = state.centros.find((c) => c.nombre === centroNombre);
+  const prevision = centro?.previsiones.find((p) => p.nombre === previsionNombre);
+  if (prevision) {
+    document.getElementById(montoInputId).value = prevision.monto;
+  }
+}
+
 function buscarRegistrosAnteriores(rut) {
   if (!rut) return [];
   const limpio = rut.replace(/[^0-9kK]/g, '').toUpperCase();
@@ -57,6 +93,7 @@ export function registrarDuplicadoConfirmado() {
     abrirModalExito();
     document.getElementById('formPaciente').reset();
     document.getElementById('fecha').valueAsDate = new Date();
+    actualizarPrevisionesDisponibles('selectInstitucion', 'selectPrevision');
     cerrarModalDuplicado();
   }
 }
@@ -74,11 +111,16 @@ export function registrarAtencion(event) {
     nombre: document.getElementById('nombre').value.trim(),
     rut,
     institucion: document.getElementById('selectInstitucion').value,
+    prevision: document.getElementById('selectPrevision').value,
     monto: parseInt(document.getElementById('monto').value) || 0,
     timestamp: Date.now()
   };
   if (!nuevo.institucion) {
     alert('Selecciona un centro');
+    return;
+  }
+  if (!nuevo.prevision) {
+    alert('Selecciona una previsión');
     return;
   }
   const previos = buscarRegistrosAnteriores(rut);
@@ -91,6 +133,7 @@ export function registrarAtencion(event) {
     abrirModalExito();
     event.target.reset();
     document.getElementById('fecha').valueAsDate = new Date();
+    actualizarPrevisionesDisponibles('selectInstitucion', 'selectPrevision');
   }
 }
 
@@ -173,6 +216,9 @@ export function editarRegistro(id) {
   document.getElementById('editRut').value = p.rut;
   const sel = document.getElementById('editSelectInstitucion');
   if (sel) sel.value = p.institucion;
+  actualizarPrevisionesDisponibles('editSelectInstitucion', 'editSelectPrevision');
+  const previsionSel = document.getElementById('editSelectPrevision');
+  if (previsionSel) previsionSel.value = p.prevision || '';
   document.getElementById('editMonto').value = p.monto;
   document.getElementById('editModal').style.display = 'flex';
 }
@@ -190,6 +236,7 @@ export function guardarEdicion() {
   state.pacientes[idx].nombre = document.getElementById('editNombre').value.trim();
   state.pacientes[idx].rut = rut;
   state.pacientes[idx].institucion = document.getElementById('editSelectInstitucion').value;
+  state.pacientes[idx].prevision = document.getElementById('editSelectPrevision').value;
   state.pacientes[idx].monto = parseInt(document.getElementById('editMonto').value) || 0;
   guardarDatos();
   alert('✅ Actualizado');

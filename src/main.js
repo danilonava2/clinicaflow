@@ -10,7 +10,10 @@ import {
   migrarCentrosDesdePacientes,
   agregarCentro,
   editarCentro,
-  eliminarCentro
+  eliminarCentro,
+  agregarPrevision,
+  editarPrevision,
+  eliminarPrevision
 } from './modules/centros.js';
 import {
   actualizarContador,
@@ -20,7 +23,9 @@ import {
   editarRegistro,
   guardarEdicion,
   eliminarRegistro,
-  registrarDuplicadoConfirmado
+  registrarDuplicadoConfirmado,
+  actualizarPrevisionesDisponibles,
+  autocompletarMontoPorPrevision
 } from './modules/pacientes.js';
 import { cargarDashboard } from './modules/dashboard.js';
 import { generarReporte, descargarReportePDF, descargarExcel } from './modules/reportes.js';
@@ -174,6 +179,9 @@ Object.assign(window, {
   agregarCentro,
   editarCentro,
   eliminarCentro,
+  agregarPrevision,
+  editarPrevision,
+  eliminarPrevision,
   editarRegistro,
   eliminarRegistro,
   guardarEdicion,
@@ -189,6 +197,19 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('formPaciente')?.addEventListener('submit', registrarAtencion);
   document.getElementById('rut')?.addEventListener('input', (e) => formatearRutInput(e.target));
   document.getElementById('busquedaRut')?.addEventListener('input', (e) => formatearRutInput(e.target));
+
+  document.getElementById('selectInstitucion')?.addEventListener('change', () =>
+    actualizarPrevisionesDisponibles('selectInstitucion', 'selectPrevision')
+  );
+  document.getElementById('selectPrevision')?.addEventListener('change', () =>
+    autocompletarMontoPorPrevision('selectInstitucion', 'selectPrevision', 'monto')
+  );
+  document.getElementById('editSelectInstitucion')?.addEventListener('change', () =>
+    actualizarPrevisionesDisponibles('editSelectInstitucion', 'editSelectPrevision')
+  );
+  document.getElementById('editSelectPrevision')?.addEventListener('change', () =>
+    autocompletarMontoPorPrevision('editSelectInstitucion', 'editSelectPrevision', 'editMonto')
+  );
 });
 
 if ('serviceWorker' in navigator) {

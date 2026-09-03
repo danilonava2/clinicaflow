@@ -206,6 +206,12 @@
               </select>
               <small style="color:#666;">Puedes agregar centros en la sección "Centros"</small>
             </div>
+            <div><label>🩺 Previsión</label>
+              <select id="selectPrevision" required disabled>
+                <option value="">-- Selecciona un centro primero --</option>
+              </select>
+              <small style="color:#666;">Puedes agregar previsiones en la sección "Centros"</small>
+            </div>
             <div><label>💰 Monto ($)</label><input type="number" id="monto" placeholder="0" required></div>
           </div>
           <button type="submit" class="btn-primary" style="margin-top:15px;">✅ Registrar Atención</button>
@@ -295,6 +301,7 @@
     <label>Paciente</label><input type="text" id="editNombre">
     <label>RUT</label><input type="text" id="editRut">
     <label>Centro</label><select id="editSelectInstitucion"></select>
+    <label>Previsión</label><select id="editSelectPrevision"></select>
     <label>Monto</label><input type="number" id="editMonto">
     <div><button onclick="guardarEdicion()" class="btn-primary">Guardar</button><button onclick="cerrarEditModal()" class="btn-secondary">Cancelar</button></div>
   </div>
