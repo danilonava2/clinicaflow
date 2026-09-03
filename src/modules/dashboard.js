@@ -1,5 +1,6 @@
-import Chart from 'chart.js/auto';
 import { state } from '../store.js';
+
+const Chart = window.Chart;
 import { formatearMonto } from '../utils/format.js';
 
 let generalChart;

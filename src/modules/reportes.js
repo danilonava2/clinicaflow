@@ -1,6 +1,7 @@
-import { jsPDF } from 'jspdf';
-import * as XLSX from 'xlsx';
 import { state } from '../store.js';
+
+const { jsPDF } = window.jspdf;
+const XLSX = window.XLSX;
 import { formatearFecha, formatearMonto, escapeHtml } from '../utils/format.js';
 import { formatearRutParaMostrar } from '../utils/rut.js';
 import { descargarArchivo } from '../utils/download.js';

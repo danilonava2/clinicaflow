@@ -3,14 +3,14 @@ import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: 'AIzaSyD2Vtk1Bzmrw1TtOw_3yMf3Z4yVFtDf9KM',
+  authDomain: 'clinicaflowapp-57a8a.firebaseapp.com',
+  databaseURL: 'https://clinicaflowapp-57a8a-default-rtdb.firebaseio.com',
+  projectId: 'clinicaflowapp-57a8a',
+  storageBucket: 'clinicaflowapp-57a8a.firebasestorage.app',
+  messagingSenderId: '451352633928',
+  appId: '1:451352633928:web:d4f989e418fef93c236e7d',
+  measurementId: 'G-3J2MSQX6QM'
 };
 
 export const app = initializeApp(firebaseConfig);
