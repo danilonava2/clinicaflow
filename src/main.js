@@ -48,7 +48,15 @@ async function onSesionIniciada(user) {
   mostrarPantallaApp();
   actualizarInfoUsuario(user.email);
 
-  await cargarDatosDelUsuario(user.uid);
+  try {
+    await Promise.race([
+      cargarDatosDelUsuario(user.uid),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), 10000))
+    ]);
+  } catch (error) {
+    console.error('Error al cargar datos del usuario:', error);
+    alert('⚠️ No se pudieron cargar tus datos (revisa tu conexión). La app seguirá funcionando, pero intenta recargar la página.');
+  }
 
   renderListaCentros();
   actualizarSelectCentros();

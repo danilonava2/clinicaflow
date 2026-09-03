@@ -1,8 +1,6 @@
-import {
-  guardarDatosUsuario as guardarRTDB,
-  cargarDatosUsuario as cargarRTDB,
-  centrosPorDefecto
-} from './firebase/realtimeDataService.js';
+import { guardarDatosUsuario as guardarFirestore } from './firebase/firestoreDataService.js';
+import { obtenerDatosConMigracion } from './firebase/migration.js';
+import { centrosPorDefecto } from './firebase/realtimeDataService.js';
 
 export const state = {
   currentUser: null,
@@ -11,20 +9,20 @@ export const state = {
 };
 
 export async function cargarDatosDelUsuario(uid) {
-  const { pacientes, centros } = await cargarRTDB(uid);
+  const { pacientes, centros } = await obtenerDatosConMigracion(uid);
   state.pacientes = pacientes;
-  state.centros = centros;
+  state.centros = centros.length ? centros : centrosPorDefecto();
 }
 
 export async function guardarDatos() {
   if (!state.currentUser) return;
   try {
-    await guardarRTDB(state.currentUser.uid, {
+    await guardarFirestore(state.currentUser.uid, {
       pacientes: state.pacientes,
       centros: state.centros
     });
   } catch (error) {
-    console.error('Error al guardar en Firebase:', error);
+    console.error('Error al guardar en Firestore:', error);
   }
 }
 
