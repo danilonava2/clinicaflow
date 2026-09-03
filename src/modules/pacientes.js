@@ -173,7 +173,7 @@ function renderResultados(paginated, total, pageNum, totalPages) {
     return;
   }
   let html = `<div style="overflow-x:auto;"><table class="tabla-resultados"><thead>
-    <tr><th>Fecha</th><th>Paciente</th><th>RUT</th><th>Centro</th><th>Monto</th><th>Acciones</th></tr>
+    <tr><th>Fecha</th><th>Paciente</th><th>RUT</th><th>Centro</th><th>Previsión</th><th>Monto</th><th>Acciones</th></tr>
     </thead><tbody>`;
   paginated.forEach((p) => {
     html += `<tr>
@@ -181,6 +181,7 @@ function renderResultados(paginated, total, pageNum, totalPages) {
       <td>${escapeHtml(p.nombre)}</td>
       <td>${formatearRutParaMostrar(p.rut)}</td>
       <td>${escapeHtml(p.institucion || '-')}</td>
+      <td>${escapeHtml(p.prevision || '-')}</td>
       <td>${formatearMonto(p.monto)}</td>
       <td><button onclick="editarRegistro('${p.id}')" class="btn-edit">✏️</button>
       <button onclick="eliminarRegistro('${p.rut}','${p.id}')" class="btn-delete">🗑️</button></td>

@@ -6,7 +6,10 @@ import { formatearFecha, formatearMonto, escapeHtml } from '../utils/format.js';
 import { formatearRutParaMostrar } from '../utils/rut.js';
 import { descargarArchivo } from '../utils/download.js';
 
+const ITEMS_PER_PAGE = 10;
+
 let currentReportRows = [];
+let currentReportPage = 1;
 
 function obtenerFiltros() {
   const inicio = document.getElementById('fechaInicio').value;
@@ -31,35 +34,42 @@ function filtrarPacientes({ nombre, rut, inst, start, end }) {
   });
 }
 
-export function generarReporte() {
+export function generarReporte(page = 1) {
   const filtros = obtenerFiltros();
   const rows = filtrarPacientes(filtros);
   currentReportRows = rows;
+  currentReportPage = page;
 
   const container = document.getElementById('reporteContainer');
+  const paginacion = document.getElementById('reportePaginacion');
   if (!container) return;
   if (rows.length === 0) {
     container.innerHTML = '<p>No se encontraron atenciones.</p>';
+    if (paginacion) paginacion.innerHTML = '';
     return;
   }
 
   const totalBruto = rows.reduce((s, p) => s + (Number(p.monto) || 0), 0);
+  const totalPages = Math.ceil(rows.length / ITEMS_PER_PAGE);
+  const startIdx = (page - 1) * ITEMS_PER_PAGE;
+  const paginated = rows.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   let html = `<h3>Reporte de Atenciones</h3>
     <p><strong>Total atenciones:</strong> ${rows.length}</p>
     <div style="overflow-x:auto;">
       <table class="tabla-resultados">
         <thead>
-          <tr><th>Fecha</th><th>Paciente</th><th>RUT</th><th>Centro</th><th>Monto</th></tr>
+          <tr><th>Fecha</th><th>Paciente</th><th>RUT</th><th>Centro</th><th>Previsión</th><th>Monto</th></tr>
         </thead>
         <tbody>`;
 
-  rows.forEach((p) => {
+  paginated.forEach((p) => {
     html += `<tr>
       <td>${formatearFecha(p.fecha)}</td>
       <td>${escapeHtml(p.nombre)}</td>
       <td>${formatearRutParaMostrar(p.rut)}</td>
       <td>${escapeHtml(p.institucion || '-')}</td>
+      <td>${escapeHtml(p.prevision || '-')}</td>
       <td>${formatearMonto(p.monto)}</td>
     </tr>`;
   });
@@ -73,6 +83,14 @@ export function generarReporte() {
     <button onclick="descargarReportePDF()" class="btn-primary">📄 Descargar PDF</button>`;
 
   container.innerHTML = html;
+
+  if (paginacion) {
+    let pagHtml = '';
+    if (page > 1) pagHtml += `<button onclick="generarReporte(${page - 1})" class="btn-secondary">⬅ Anterior</button>`;
+    pagHtml += `<span>Página ${page} de ${totalPages}</span>`;
+    if (page < totalPages) pagHtml += `<button onclick="generarReporte(${page + 1})" class="btn-secondary">Siguiente ➡</button>`;
+    paginacion.innerHTML = pagHtml;
+  }
 }
 
 export function descargarReportePDF() {
@@ -116,16 +134,19 @@ export function descargarReportePDF() {
     y += 10;
   }
 
+  const COL = { fecha: 16, paciente: 40, rut: 76, centro: 104, prevision: 138, monto: 168 };
+
   const dibujarCabecera = () => {
     doc.setFillColor(59, 130, 246);
-    doc.rect(14, y, 180, 7, 'F');
+    doc.rect(14, y, 182, 7, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8);
-    doc.text('Fecha', 16, y + 5);
-    doc.text('Paciente', 45, y + 5);
-    doc.text('RUT', 95, y + 5);
-    doc.text('Centro', 120, y + 5);
-    doc.text('Monto', 170, y + 5);
+    doc.text('Fecha', COL.fecha, y + 5);
+    doc.text('Paciente', COL.paciente, y + 5);
+    doc.text('RUT', COL.rut, y + 5);
+    doc.text('Centro', COL.centro, y + 5);
+    doc.text('Previsión', COL.prevision, y + 5);
+    doc.text('Monto', COL.monto, y + 5);
     y += 10;
     doc.setTextColor(0, 0, 0);
   };
@@ -142,11 +163,12 @@ export function descargarReportePDF() {
       dibujarCabecera();
     }
 
-    doc.text(p.fecha || '', 16, y);
-    doc.text((p.nombre || '').substring(0, 22), 45, y);
-    doc.text(formatearRutParaMostrar(p.rut || ''), 95, y);
-    doc.text((p.institucion || '').substring(0, 22), 120, y);
-    doc.text(`$${Number(p.monto).toLocaleString('es-CL')}`, 170, y);
+    doc.text(p.fecha || '', COL.fecha, y);
+    doc.text((p.nombre || '').substring(0, 16), COL.paciente, y);
+    doc.text(formatearRutParaMostrar(p.rut || ''), COL.rut, y);
+    doc.text((p.institucion || '').substring(0, 16), COL.centro, y);
+    doc.text((p.prevision || '-').substring(0, 14), COL.prevision, y);
+    doc.text(`$${Number(p.monto).toLocaleString('es-CL')}`, COL.monto, y);
     y += 6;
   }
 
@@ -178,9 +200,9 @@ export function descargarExcel() {
     return;
   }
 
-  const data = [['Fecha', 'Paciente', 'RUT', 'Centro', 'Monto']];
+  const data = [['Fecha', 'Paciente', 'RUT', 'Centro', 'Previsión', 'Monto']];
   filtered.forEach((p) => {
-    data.push([p.fecha, p.nombre, p.rut, p.institucion || '', Number(p.monto) || 0]);
+    data.push([p.fecha, p.nombre, p.rut, p.institucion || '', p.prevision || '', Number(p.monto) || 0]);
   });
 
   const wb = XLSX.utils.book_new();
