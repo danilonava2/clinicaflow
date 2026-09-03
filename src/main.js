@@ -2,6 +2,7 @@ import './firebase/config.js';
 import { state, cargarDatosDelUsuario, resetState } from './store.js';
 import * as authService from './firebase/authService.js';
 import { formatearRutInput } from './utils/rut.js';
+import { iniciarControlInactividad, detenerControlInactividad } from './utils/inactivityTimer.js';
 import { setupNavigation, initMobileMenu, seleccionarSeccion, toggleConfigMenu } from './ui/navigation.js';
 import { confirmAction } from './ui/modals.js';
 import {
@@ -84,6 +85,11 @@ async function onSesionIniciada(user) {
 
   document.querySelectorAll('.section').forEach((s) => s.classList.remove('active'));
   document.getElementById('section-welcome')?.classList.add('active');
+
+  iniciarControlInactividad(() => {
+    alert('⏰ Tu sesión se cerró automáticamente por inactividad.');
+    logout();
+  });
 }
 
 async function login() {
@@ -126,6 +132,7 @@ async function register() {
 }
 
 async function logout() {
+  detenerControlInactividad();
   await authService.logout();
   mostrarPantallaLogin();
   resetState();
