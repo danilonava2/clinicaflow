@@ -1,5 +1,5 @@
 import './firebase/config.js';
-import { state, cargarDatosDelUsuario, resetState } from './store.js';
+import { state, iniciarSincronizacion, detenerSincronizacion, resetState } from './store.js';
 import * as authService from './firebase/authService.js';
 import { formatearRutInput } from './utils/rut.js';
 import { iniciarControlInactividad, detenerControlInactividad } from './utils/inactivityTimer.js';
@@ -57,26 +57,7 @@ function actualizarInfoUsuario(email) {
   if (mobileUserInfo) mobileUserInfo.innerHTML = email;
 }
 
-async function onSesionIniciada(user) {
-  state.currentUser = user;
-  mostrarPantallaApp();
-  actualizarInfoUsuario(user.email);
-
-  try {
-    await Promise.race([
-      cargarDatosDelUsuario(user.uid),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), 10000))
-    ]);
-  } catch (error) {
-    console.error('Error al cargar datos del usuario:', error);
-    alert('⚠️ No se pudieron cargar tus datos (revisa tu conexión). La app seguirá funcionando, pero intenta recargar la página.');
-  }
-
-  renderListaCentros();
-  actualizarSelectCentros();
-  actualizarSelectPrevisionDashboard();
-  migrarCentrosDesdePacientes();
-  actualizarContador();
+function mostrarPantallaInicial() {
   setupNavigation();
   initMobileMenu();
 
@@ -90,6 +71,53 @@ async function onSesionIniciada(user) {
     alert('⏰ Tu sesión se cerró automáticamente por inactividad.');
     logout();
   });
+}
+
+async function onSesionIniciada(user) {
+  state.currentUser = user;
+  mostrarPantallaApp();
+  actualizarInfoUsuario(user.email);
+
+  // Flag local a esta sesion de login: evita inicializar la pantalla dos
+  // veces si el primer dato tarda mas de 10s en llegar (el timeout de abajo
+  // ya habria mostrado la pantalla, y el listener sigue vivo de fondo).
+  let pantallaInicialMostrada = false;
+
+  const alSincronizarDatos = (esPrimeraVez) => {
+    renderListaCentros();
+    actualizarSelectCentros();
+    actualizarSelectPrevisionDashboard();
+    migrarCentrosDesdePacientes();
+    actualizarContador();
+
+    if (esPrimeraVez) {
+      if (!pantallaInicialMostrada) {
+        pantallaInicialMostrada = true;
+        mostrarPantallaInicial();
+      }
+      return;
+    }
+
+    // Actualizaciones que llegan de otro dispositivo (o de esta misma
+    // sesion): refresca solo la seccion que se esta viendo, para no
+    // interrumpir al usuario en otras pantallas.
+    if (document.getElementById('section-dashboard')?.classList.contains('active')) cargarDashboard();
+    if (document.getElementById('section-buscar')?.classList.contains('active')) buscarPacientes();
+  };
+
+  try {
+    await Promise.race([
+      iniciarSincronizacion(user.uid, alSincronizarDatos),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), 10000))
+    ]);
+  } catch (error) {
+    console.error('Error al cargar datos del usuario:', error);
+    alert('⚠️ No se pudieron cargar tus datos (revisa tu conexión). La app seguirá funcionando, pero intenta recargar la página.');
+    if (!pantallaInicialMostrada) {
+      pantallaInicialMostrada = true;
+      mostrarPantallaInicial();
+    }
+  }
 }
 
 async function login() {
@@ -133,6 +161,7 @@ async function register() {
 
 async function logout() {
   detenerControlInactividad();
+  detenerSincronizacion();
   await authService.logout();
   mostrarPantallaLogin();
   resetState();

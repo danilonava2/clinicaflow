@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { firestoreDb } from './config.js';
 
 export async function guardarDatosUsuario(uid, { pacientes, centros }) {
@@ -18,4 +18,24 @@ export async function cargarDatosUsuario(uid) {
     pacientes: data.pacientes || [],
     centros: data.centros || []
   };
+}
+
+// Se queda escuchando cambios en el documento del usuario (propios o de
+// otro dispositivo) y llama a onCambio cada vez que hay una actualizacion.
+// Devuelve una funcion para dejar de escuchar (llamar al cerrar sesion).
+export function escucharDatosUsuario(uid, onCambio) {
+  return onSnapshot(
+    doc(firestoreDb, 'usuarios', uid),
+    (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.data();
+      onCambio({
+        pacientes: data.pacientes || [],
+        centros: data.centros || []
+      });
+    },
+    (error) => {
+      console.error('Error escuchando cambios en Firestore:', error);
+    }
+  );
 }
