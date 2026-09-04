@@ -33,6 +33,7 @@ export function initMobileMenu() {
   mobileBtns.forEach((btn) => {
     btn.addEventListener('click', function () {
       const section = this.getAttribute('data-section');
+      if (!section) return;
       seleccionarSeccion(section);
     });
   });
