@@ -4,7 +4,7 @@ import * as authService from './firebase/authService.js';
 import { formatearRutInput } from './utils/rut.js';
 import { iniciarControlInactividad, detenerControlInactividad } from './utils/inactivityTimer.js';
 import { setupNavigation, initMobileMenu, seleccionarSeccion, toggleConfigMenu } from './ui/navigation.js';
-import { confirmAction } from './ui/modals.js';
+import { confirmarAccion, cerrarAviso, mostrarAviso } from './ui/notificaciones.js';
 import {
   renderListaCentros,
   actualizarSelectCentros,
@@ -13,9 +13,16 @@ import {
   agregarCentro,
   editarCentro,
   eliminarCentro,
+  cerrarRenombrarCentroModal,
+  confirmarRenombrarCentro,
+  cerrarEliminarCentroModal,
+  alCambiarOpcionEliminarCentro,
+  confirmarEliminarCentro,
   agregarPrevision,
   editarPrevision,
-  eliminarPrevision
+  eliminarPrevision,
+  cerrarEditarPrevisionModal,
+  confirmarEditarPrevision
 } from './modules/centros.js';
 import {
   actualizarContador,
@@ -39,7 +46,7 @@ import {
   calcularDescuentos
 } from './modules/reportes.js';
 import { exportarBackup, importarBackup, limpiarTodo } from './modules/backup.js';
-import { cerrarModal, cerrarEditModal, cerrarModalDuplicado } from './ui/modals.js';
+import { cerrarEditModal, cerrarModalDuplicado } from './ui/modals.js';
 
 function mostrarPantallaApp() {
   document.getElementById('loginScreen').style.display = 'none';
@@ -68,7 +75,7 @@ function mostrarPantallaInicial() {
   document.getElementById('section-welcome')?.classList.add('active');
 
   iniciarControlInactividad(() => {
-    alert('⏰ Tu sesión se cerró automáticamente por inactividad.');
+    mostrarAviso('Tu sesión se cerró automáticamente por inactividad.', 'advertencia');
     logout();
   });
 }
@@ -112,7 +119,7 @@ async function onSesionIniciada(user) {
     ]);
   } catch (error) {
     console.error('Error al cargar datos del usuario:', error);
-    alert('⚠️ No se pudieron cargar tus datos (revisa tu conexión). La app seguirá funcionando, pero intenta recargar la página.');
+    mostrarAviso('No se pudieron cargar tus datos (revisa tu conexión). La app seguirá funcionando, pero intenta recargar la página.', 'advertencia');
     if (!pantallaInicialMostrada) {
       pantallaInicialMostrada = true;
       mostrarPantallaInicial();
@@ -124,13 +131,13 @@ async function login() {
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
   if (!email || !password) {
-    alert('Ingresa email y contraseña');
+    mostrarAviso('Ingresa email y contraseña', 'advertencia');
     return;
   }
   try {
     await authService.login(email, password);
   } catch (error) {
-    alert('Error al iniciar sesión: ' + error.message);
+    mostrarAviso('Error al iniciar sesión: ' + error.message, 'error');
   }
 }
 
@@ -140,22 +147,22 @@ async function register() {
   const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
   if (!email || !password) {
-    alert('Completa todos los campos');
+    mostrarAviso('Completa todos los campos', 'advertencia');
     return;
   }
   if (password !== confirmPassword) {
-    alert('Las contraseñas no coinciden');
+    mostrarAviso('Las contraseñas no coinciden', 'advertencia');
     return;
   }
   if (password.length < 6) {
-    alert('La contraseña debe tener al menos 6 caracteres');
+    mostrarAviso('La contraseña debe tener al menos 6 caracteres', 'advertencia');
     return;
   }
 
   try {
     await authService.register(email, password);
   } catch (error) {
-    alert('Error al registrarse: ' + error.message);
+    mostrarAviso('Error al registrarse: ' + error.message, 'error');
   }
 }
 
@@ -180,17 +187,17 @@ function mostrarRegistro() {
 async function resetPassword() {
   const email = document.getElementById('loginEmail').value;
   if (!email) {
-    alert('Ingresa tu correo electrónico para restablecer la contraseña');
+    mostrarAviso('Ingresa tu correo electrónico para restablecer la contraseña', 'advertencia');
     return;
   }
   try {
     await authService.resetPassword(email);
-    alert('✅ Se ha enviado un enlace de restablecimiento a tu correo electrónico.');
+    mostrarAviso('Se ha enviado un enlace de restablecimiento a tu correo electrónico.', 'exito');
   } catch (error) {
     if (error.code === 'auth/user-not-found') {
-      alert('❌ No existe una cuenta con ese correo electrónico');
+      mostrarAviso('No existe una cuenta con ese correo electrónico', 'error');
     } else {
-      alert('❌ Error al enviar el correo: ' + error.message);
+      mostrarAviso('Error al enviar el correo: ' + error.message, 'error');
     }
   }
 }
@@ -227,17 +234,24 @@ Object.assign(window, {
   agregarCentro,
   editarCentro,
   eliminarCentro,
+  cerrarRenombrarCentroModal,
+  confirmarRenombrarCentro,
+  cerrarEliminarCentroModal,
+  alCambiarOpcionEliminarCentro,
+  confirmarEliminarCentro,
   agregarPrevision,
   editarPrevision,
   eliminarPrevision,
+  cerrarEditarPrevisionModal,
+  confirmarEditarPrevision,
   editarRegistro,
   eliminarRegistro,
   guardarEdicion,
   registrarDuplicadoConfirmado,
-  cerrarModal,
   cerrarEditModal,
   cerrarModalDuplicado,
-  confirmAction
+  confirmarAccion,
+  cerrarAviso
 });
 
 document.addEventListener('DOMContentLoaded', () => {

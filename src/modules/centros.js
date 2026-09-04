@@ -2,6 +2,7 @@ import { state, guardarDatos } from '../store.js';
 import { escapeHtml, formatearMonto } from '../utils/format.js';
 import { cargarDashboard } from './dashboard.js';
 import { buscarPacientes } from './pacientes.js';
+import { mostrarAviso, mostrarToast, pedirConfirmacion } from '../ui/notificaciones.js';
 
 export function renderListaCentros() {
   const container = document.getElementById('listaCentros');
@@ -59,14 +60,37 @@ export function renderListaCentros() {
   container.innerHTML = html;
 }
 
+function refrescarVistasDependientes() {
+  if (document.getElementById('section-dashboard').classList.contains('active')) cargarDashboard();
+  if (document.getElementById('section-buscar').classList.contains('active')) buscarPacientes();
+}
+
+// ==================== RENOMBRAR CENTRO ====================
 export function editarCentro(index) {
+  const centro = state.centros[index];
+  document.getElementById('renombrarCentroIndex').value = index;
+  document.getElementById('renombrarCentroInput').value = centro.nombre;
+  document.getElementById('renombrarCentroModal').style.display = 'flex';
+}
+
+export function cerrarRenombrarCentroModal() {
+  document.getElementById('renombrarCentroModal').style.display = 'none';
+}
+
+export function confirmarRenombrarCentro() {
+  const index = parseInt(document.getElementById('renombrarCentroIndex').value);
+  const nuevoNombre = document.getElementById('renombrarCentroInput').value.trim();
   const centroActual = state.centros[index];
-  const nuevoNombre = prompt(`Editar centro "${centroActual.nombre}"`, centroActual.nombre);
-  if (!nuevoNombre || nuevoNombre === centroActual.nombre) return;
-  if (state.centros.some((c) => c.nombre === nuevoNombre)) {
-    alert('Ya existe un centro con ese nombre');
+
+  if (!nuevoNombre || nuevoNombre === centroActual.nombre) {
+    cerrarRenombrarCentroModal();
     return;
   }
+  if (state.centros.some((c) => c.nombre === nuevoNombre)) {
+    mostrarAviso('Ya existe un centro con ese nombre', 'advertencia');
+    return;
+  }
+
   const nombreAnterior = centroActual.nombre;
   centroActual.nombre = nuevoNombre;
   let registrosActualizados = 0;
@@ -77,75 +101,95 @@ export function editarCentro(index) {
     }
     return p;
   });
+
   guardarDatos();
   renderListaCentros();
   actualizarSelectCentros();
   actualizarSelectPrevisionDashboard();
-  alert(`Centro "${nombreAnterior}" → "${nuevoNombre}"\nSe actualizaron ${registrosActualizados} registro(s)`);
-  if (document.getElementById('section-dashboard').classList.contains('active')) cargarDashboard();
-  if (document.getElementById('section-buscar').classList.contains('active')) buscarPacientes();
+  cerrarRenombrarCentroModal();
+  mostrarToast(`"${nombreAnterior}" → "${nuevoNombre}" (${registrosActualizados} registro(s) actualizados)`, 'exito');
+  refrescarVistasDependientes();
 }
 
+// ==================== ELIMINAR CENTRO ====================
 export function eliminarCentro(index) {
   const centro = state.centros[index];
   const cantidad = state.pacientes.filter((p) => p.institucion === centro.nombre).length;
-  const opcion = prompt(
-    `Centro "${centro.nombre}" tiene ${cantidad} registro(s) asociado(s).\n1 - Mantener registros\n2 - Eliminar registros\n3 - Reasignar a otro centro\n\nEscribe 1, 2 o 3:`
-  );
-  if (opcion === '1') {
+
+  document.getElementById('eliminarCentroIndex').value = index;
+  document.getElementById('eliminarCentroInfo').innerText = `"${centro.nombre}" tiene ${cantidad} registro(s) asociado(s). ¿Qué quieres hacer?`;
+  document.querySelector('input[name="opcionEliminarCentro"][value="mantener"]').checked = true;
+
+  const otros = state.centros.filter((c, i) => i !== index);
+  const select = document.getElementById('reasignarCentroSelect');
+  select.innerHTML = otros.map((c) => `<option value="${escapeHtml(c.nombre)}">${escapeHtml(c.nombre)}</option>`).join('');
+  document.getElementById('reasignarCentroSelectWrap').style.display = 'none';
+
+  document.getElementById('eliminarCentroModal').style.display = 'flex';
+}
+
+export function cerrarEliminarCentroModal() {
+  document.getElementById('eliminarCentroModal').style.display = 'none';
+}
+
+export function alCambiarOpcionEliminarCentro() {
+  const opcion = document.querySelector('input[name="opcionEliminarCentro"]:checked').value;
+  document.getElementById('reasignarCentroSelectWrap').style.display = opcion === 'reasignar' ? 'block' : 'none';
+}
+
+export async function confirmarEliminarCentro() {
+  const index = parseInt(document.getElementById('eliminarCentroIndex').value);
+  const opcion = document.querySelector('input[name="opcionEliminarCentro"]:checked').value;
+  const centro = state.centros[index];
+  const cantidad = state.pacientes.filter((p) => p.institucion === centro.nombre).length;
+
+  if (opcion === 'mantener') {
     state.centros.splice(index, 1);
     guardarDatos();
     renderListaCentros();
     actualizarSelectCentros();
     actualizarSelectPrevisionDashboard();
-    alert(`Centro "${centro.nombre}" eliminado. Los registros conservan el nombre.`);
-  } else if (opcion === '2') {
-    if (confirm(`¿Eliminar ${cantidad} registro(s)?`)) {
-      state.pacientes = state.pacientes.filter((p) => p.institucion !== centro.nombre);
-      state.centros.splice(index, 1);
-      guardarDatos();
-      renderListaCentros();
-      actualizarSelectCentros();
-      actualizarSelectPrevisionDashboard();
-      alert(`Se eliminaron ${cantidad} registro(s) y el centro.`);
-      if (document.getElementById('section-dashboard').classList.contains('active')) cargarDashboard();
-      if (document.getElementById('section-buscar').classList.contains('active')) buscarPacientes(1);
-    }
-  } else if (opcion === '3') {
-    const otros = state.centros.filter((c, i) => i !== index);
-    if (otros.length === 0) {
-      alert('No hay otros centros.');
+    cerrarEliminarCentroModal();
+    mostrarToast(`Centro "${centro.nombre}" eliminado. Los registros conservan el nombre.`, 'exito');
+  } else if (opcion === 'eliminar') {
+    cerrarEliminarCentroModal();
+    if (!(await pedirConfirmacion(`¿Eliminar ${cantidad} registro(s) junto con el centro? Esta acción no se puede deshacer.`))) return;
+    state.pacientes = state.pacientes.filter((p) => p.institucion !== centro.nombre);
+    state.centros.splice(index, 1);
+    guardarDatos();
+    renderListaCentros();
+    actualizarSelectCentros();
+    actualizarSelectPrevisionDashboard();
+    mostrarToast(`Se eliminaron ${cantidad} registro(s) y el centro.`, 'exito');
+    refrescarVistasDependientes();
+  } else if (opcion === 'reasignar') {
+    const nuevoNombre = document.getElementById('reasignarCentroSelect').value;
+    if (!nuevoNombre) {
+      mostrarAviso('No hay otro centro disponible para reasignar.', 'advertencia');
       return;
     }
-    const lista = otros.map((c, i) => `${i + 1} - ${c.nombre}`).join('\n');
-    const sel = prompt(`Reasignar a:\n${lista}\n\nNúmero:`);
-    const idx = parseInt(sel) - 1;
-    if (idx >= 0 && idx < otros.length) {
-      const nuevo = otros[idx];
-      state.pacientes = state.pacientes.map((p) =>
-        p.institucion === centro.nombre ? { ...p, institucion: nuevo.nombre } : p
-      );
-      state.centros.splice(index, 1);
-      guardarDatos();
-      renderListaCentros();
-      actualizarSelectCentros();
-      actualizarSelectPrevisionDashboard();
-      alert(`${cantidad} registro(s) reasignados a "${nuevo.nombre}"`);
-      if (document.getElementById('section-dashboard').classList.contains('active')) cargarDashboard();
-      if (document.getElementById('section-buscar').classList.contains('active')) buscarPacientes(1);
-    }
+    state.pacientes = state.pacientes.map((p) => (p.institucion === centro.nombre ? { ...p, institucion: nuevoNombre } : p));
+    state.centros.splice(index, 1);
+    guardarDatos();
+    renderListaCentros();
+    actualizarSelectCentros();
+    actualizarSelectPrevisionDashboard();
+    cerrarEliminarCentroModal();
+    mostrarToast(`${cantidad} registro(s) reasignados a "${nuevoNombre}"`, 'exito');
+    refrescarVistasDependientes();
   }
 }
 
+// ==================== AGREGAR CENTRO ====================
 export function agregarCentro() {
   const input = document.getElementById('nuevoCentro');
   const nombre = input.value.trim();
   if (!nombre) {
-    alert('Ingresa un nombre');
+    mostrarAviso('Ingresa un nombre', 'advertencia');
     return;
   }
   if (state.centros.some((c) => c.nombre === nombre)) {
-    alert('Ya existe');
+    mostrarAviso('Ya existe un centro con ese nombre', 'advertencia');
     return;
   }
   state.centros.push({ nombre, previsiones: [] });
@@ -153,52 +197,73 @@ export function agregarCentro() {
   renderListaCentros();
   actualizarSelectCentros();
   input.value = '';
-  alert(`Centro "${nombre}" agregado`);
+  mostrarToast(`Centro "${nombre}" agregado`, 'exito');
 }
 
+// ==================== PREVISIONES ====================
 export function agregarPrevision(centroIndex) {
   const nombreInput = document.getElementById(`nuevaPrevisionNombre-${centroIndex}`);
   const montoInput = document.getElementById(`nuevaPrevisionMonto-${centroIndex}`);
   const nombre = nombreInput.value.trim();
   const monto = parseInt(montoInput.value) || 0;
   if (!nombre) {
-    alert('Ingresa un nombre para la previsión');
+    mostrarAviso('Ingresa un nombre para la previsión', 'advertencia');
     return;
   }
   const centro = state.centros[centroIndex];
   if (centro.previsiones.some((p) => p.nombre === nombre)) {
-    alert('Ya existe una previsión con ese nombre en este centro');
+    mostrarAviso('Ya existe una previsión con ese nombre en este centro', 'advertencia');
     return;
   }
   centro.previsiones.push({ nombre, monto });
   guardarDatos();
   renderListaCentros();
   actualizarSelectPrevisionDashboard();
+  mostrarToast(`Previsión "${nombre}" agregada`, 'exito');
 }
 
 export function editarPrevision(centroIndex, previsionIndex) {
   const prevision = state.centros[centroIndex].previsiones[previsionIndex];
-  const nuevoNombre = prompt('Nombre de la previsión', prevision.nombre);
-  if (nuevoNombre === null) return;
-  const nuevoMontoStr = prompt('Monto para esta previsión', prevision.monto);
-  if (nuevoMontoStr === null) return;
-  prevision.nombre = nuevoNombre.trim() || prevision.nombre;
-  prevision.monto = parseInt(nuevoMontoStr) || 0;
+  document.getElementById('editarPrevisionCentroIndex').value = centroIndex;
+  document.getElementById('editarPrevisionIndex').value = previsionIndex;
+  document.getElementById('editarPrevisionNombreInput').value = prevision.nombre;
+  document.getElementById('editarPrevisionMontoInput').value = prevision.monto;
+  document.getElementById('editarPrevisionModal').style.display = 'flex';
+}
+
+export function cerrarEditarPrevisionModal() {
+  document.getElementById('editarPrevisionModal').style.display = 'none';
+}
+
+export function confirmarEditarPrevision() {
+  const centroIndex = parseInt(document.getElementById('editarPrevisionCentroIndex').value);
+  const previsionIndex = parseInt(document.getElementById('editarPrevisionIndex').value);
+  const prevision = state.centros[centroIndex].previsiones[previsionIndex];
+
+  const nuevoNombre = document.getElementById('editarPrevisionNombreInput').value.trim();
+  const nuevoMonto = parseInt(document.getElementById('editarPrevisionMontoInput').value) || 0;
+
+  prevision.nombre = nuevoNombre || prevision.nombre;
+  prevision.monto = nuevoMonto;
   guardarDatos();
   renderListaCentros();
   actualizarSelectPrevisionDashboard();
+  cerrarEditarPrevisionModal();
+  mostrarToast('Previsión actualizada.', 'exito');
 }
 
-export function eliminarPrevision(centroIndex, previsionIndex) {
+export async function eliminarPrevision(centroIndex, previsionIndex) {
   const centro = state.centros[centroIndex];
   const prevision = centro.previsiones[previsionIndex];
-  if (!confirm(`¿Eliminar la previsión "${prevision.nombre}"?`)) return;
+  if (!(await pedirConfirmacion(`¿Eliminar la previsión "${prevision.nombre}"?`))) return;
   centro.previsiones.splice(previsionIndex, 1);
   guardarDatos();
   renderListaCentros();
   actualizarSelectPrevisionDashboard();
+  mostrarToast('Previsión eliminada.', 'exito');
 }
 
+// ==================== SELECTS COMPARTIDOS ====================
 export function actualizarSelectCentros() {
   const selects = [
     document.getElementById('selectInstitucion'),

@@ -2,12 +2,8 @@ import { state, guardarDatos } from '../store.js';
 import { validarRUT } from '../utils/rut.js';
 import { formatearFecha, formatearMonto, escapeHtml } from '../utils/format.js';
 import { formatearRutParaMostrar } from '../utils/rut.js';
-import {
-  abrirModalExito,
-  abrirModalDuplicado,
-  cerrarModalDuplicado,
-  getPendingDuplicateData
-} from '../ui/modals.js';
+import { abrirModalDuplicado, cerrarModalDuplicado, getPendingDuplicateData } from '../ui/modals.js';
+import { mostrarAviso, mostrarToast, pedirConfirmacion } from '../ui/notificaciones.js';
 
 const ITEMS_PER_PAGE = 10;
 let currentPage = 1;
@@ -90,7 +86,7 @@ export function registrarDuplicadoConfirmado() {
     state.pacientes.unshift(nuevo);
     guardarDatos();
     actualizarContador();
-    abrirModalExito();
+    mostrarToast('¡Atención registrada correctamente!', 'exito');
     document.getElementById('formPaciente').reset();
     document.getElementById('fecha').valueAsDate = new Date();
     actualizarPrevisionesDisponibles('selectInstitucion', 'selectPrevision');
@@ -102,7 +98,7 @@ export function registrarAtencion(event) {
   event.preventDefault();
   const rut = document.getElementById('rut').value;
   if (!validarRUT(rut)) {
-    alert('❌ RUT inválido.');
+    mostrarAviso('RUT inválido.', 'error');
     return;
   }
   const nuevo = {
@@ -116,11 +112,11 @@ export function registrarAtencion(event) {
     timestamp: Date.now()
   };
   if (!nuevo.institucion) {
-    alert('Selecciona un centro');
+    mostrarAviso('Selecciona un centro', 'advertencia');
     return;
   }
   if (!nuevo.prevision) {
-    alert('Selecciona una previsión');
+    mostrarAviso('Selecciona una previsión', 'advertencia');
     return;
   }
   const previos = buscarRegistrosAnteriores(rut);
@@ -130,7 +126,7 @@ export function registrarAtencion(event) {
     state.pacientes.unshift(nuevo);
     guardarDatos();
     actualizarContador();
-    abrirModalExito();
+    mostrarToast('¡Atención registrada correctamente!', 'exito');
     event.target.reset();
     document.getElementById('fecha').valueAsDate = new Date();
     actualizarPrevisionesDisponibles('selectInstitucion', 'selectPrevision');
@@ -234,7 +230,7 @@ export function guardarEdicion() {
   if (idx === -1) return;
   const rut = document.getElementById('editRut').value;
   if (!validarRUT(rut)) {
-    alert('❌ RUT inválido.');
+    mostrarAviso('RUT inválido.', 'error');
     return;
   }
   state.pacientes[idx].fecha = document.getElementById('editFecha').value;
@@ -244,16 +240,16 @@ export function guardarEdicion() {
   state.pacientes[idx].prevision = document.getElementById('editSelectPrevision').value;
   state.pacientes[idx].monto = parseInt(document.getElementById('editMonto').value) || 0;
   guardarDatos();
-  alert('✅ Actualizado');
+  mostrarToast('Registro actualizado.', 'exito');
   document.getElementById('editModal').style.display = 'none';
   buscarPacientes(currentPage);
 }
 
-export function eliminarRegistro(rut, id) {
-  if (!confirm(`¿Eliminar atención de ${rut}?`)) return;
+export async function eliminarRegistro(rut, id) {
+  if (!(await pedirConfirmacion(`¿Eliminar atención de ${rut}?`))) return;
   state.pacientes = state.pacientes.filter((p) => p.id !== id);
   guardarDatos();
   actualizarContador();
-  alert('Eliminado');
+  mostrarToast('Registro eliminado.', 'exito');
   buscarPacientes(currentPage);
 }

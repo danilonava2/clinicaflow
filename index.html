@@ -309,7 +309,13 @@
 </div>
 
 <!-- MODALES -->
-<div id="successModal" class="modal"><div class="modal-content"><h2>✅ Atención Registrada</h2><button onclick="cerrarModal()" class="btn-primary">OK</button></div></div>
+<div id="avisoModal" class="modal">
+  <div class="modal-content aviso-modal-content">
+    <div class="aviso-icono" id="avisoIcono">ℹ️</div>
+    <p id="avisoMensaje"></p>
+    <button onclick="cerrarAviso()" class="btn-primary btn-block">Entendido</button>
+  </div>
+</div>
 <div id="editModal" class="modal">
   <div class="modal-content">
     <h3>✏️ Editar</h3>
@@ -320,16 +326,18 @@
     <label>Centro</label><select id="editSelectInstitucion"></select>
     <label>Previsión</label><select id="editSelectPrevision"></select>
     <label>Monto</label><input type="number" id="editMonto">
-    <div><button onclick="guardarEdicion()" class="btn-primary">Guardar</button><button onclick="cerrarEditModal()" class="btn-secondary">Cancelar</button></div>
+    <div class="modal-actions"><button onclick="guardarEdicion()" class="btn-primary">Guardar</button><button onclick="cerrarEditModal()" class="btn-secondary">Cancelar</button></div>
   </div>
 </div>
-<div id="confirmModal" class="modal"><div class="modal-content"><h3>⚠️ Confirmar</h3><p id="confirmMessage"></p><button onclick="confirmAction(true)" class="btn-primary">Sí</button><button onclick="confirmAction(false)" class="btn-secondary">No</button></div></div>
+<div id="confirmModal" class="modal"><div class="modal-content"><h3>⚠️ Confirmar</h3><p id="confirmMessage" style="margin-bottom:10px; color:#475569;"></p><div class="modal-actions"><button onclick="confirmarAccion(true)" class="btn-primary">Sí</button><button onclick="confirmarAccion(false)" class="btn-secondary">No</button></div></div></div>
 <div id="duplicateWarningModal" class="modal">
   <div class="modal-content">
     <h2>⚠️ Paciente ya registrado</h2>
     <div id="duplicateContent"></div>
-    <button onclick="registrarDuplicadoConfirmado()" class="btn-primary">✅ Sí, registrar</button>
-    <button onclick="cerrarModalDuplicado()" class="btn-secondary">❌ Cancelar</button>
+    <div class="modal-actions">
+      <button onclick="registrarDuplicadoConfirmado()" class="btn-primary">✅ Sí, registrar</button>
+      <button onclick="cerrarModalDuplicado()" class="btn-secondary">❌ Cancelar</button>
+    </div>
   </div>
 </div>
 <div id="descuentosModal" class="modal">
@@ -364,6 +372,53 @@
       <span id="descuentoTotalFinal">$0</span>
     </div>
     <button onclick="cerrarDescuentosModal()" class="btn-secondary btn-block" style="margin-top:15px;">Cerrar</button>
+  </div>
+</div>
+<div id="renombrarCentroModal" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Renombrar Centro</h3>
+    <input type="hidden" id="renombrarCentroIndex">
+    <label>Nombre del centro</label>
+    <input type="text" id="renombrarCentroInput">
+    <div class="modal-actions">
+      <button onclick="confirmarRenombrarCentro()" class="btn-primary">Guardar</button>
+      <button onclick="cerrarRenombrarCentroModal()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+<div id="editarPrevisionModal" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Editar Previsión</h3>
+    <input type="hidden" id="editarPrevisionCentroIndex">
+    <input type="hidden" id="editarPrevisionIndex">
+    <label>Nombre</label>
+    <input type="text" id="editarPrevisionNombreInput">
+    <label>Monto</label>
+    <input type="number" id="editarPrevisionMontoInput">
+    <div class="modal-actions">
+      <button onclick="confirmarEditarPrevision()" class="btn-primary">Guardar</button>
+      <button onclick="cerrarEditarPrevisionModal()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+<div id="eliminarCentroModal" class="modal">
+  <div class="modal-content">
+    <h3>🗑️ Eliminar Centro</h3>
+    <input type="hidden" id="eliminarCentroIndex">
+    <p id="eliminarCentroInfo" style="margin-bottom:15px; color:#475569;"></p>
+    <div class="opciones-eliminar-centro">
+      <label><input type="radio" name="opcionEliminarCentro" value="mantener" checked onchange="alCambiarOpcionEliminarCentro()"> Mantener registros (solo elimina el centro)</label>
+      <label><input type="radio" name="opcionEliminarCentro" value="eliminar" onchange="alCambiarOpcionEliminarCentro()"> Eliminar también los registros de ese centro</label>
+      <label><input type="radio" name="opcionEliminarCentro" value="reasignar" onchange="alCambiarOpcionEliminarCentro()"> Reasignar registros a otro centro</label>
+    </div>
+    <div id="reasignarCentroSelectWrap" style="display:none; margin-top:10px;">
+      <label>Reasignar a</label>
+      <select id="reasignarCentroSelect"></select>
+    </div>
+    <div class="modal-actions">
+      <button onclick="confirmarEliminarCentro()" class="btn-primary">Confirmar</button>
+      <button onclick="cerrarEliminarCentroModal()" class="btn-secondary">Cancelar</button>
+    </div>
   </div>
 </div>
 

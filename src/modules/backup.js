@@ -1,9 +1,10 @@
 import { state, guardarDatos, resetState } from '../store.js';
 import { descargarArchivo } from '../utils/download.js';
+import { mostrarAviso, mostrarToast, pedirConfirmacion } from '../ui/notificaciones.js';
 
 export function exportarBackup() {
   if (state.pacientes.length === 0) {
-    alert('No hay datos para exportar.');
+    mostrarAviso('No hay datos para exportar.', 'advertencia');
     return;
   }
 
@@ -23,30 +24,30 @@ export function importarBackup(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function (e) {
+  reader.onload = async function (e) {
     try {
       const backup = JSON.parse(e.target.result);
       if (!backup.pacientes || !Array.isArray(backup.pacientes)) throw new Error('Formato inválido');
-      if (confirm(`¿Importar ${backup.totalRegistros} registros?`)) {
+      if (await pedirConfirmacion(`¿Importar ${backup.totalRegistros} registros?`)) {
         state.pacientes = backup.pacientes;
         if (backup.centros) state.centros = backup.centros;
         guardarDatos();
-        alert('Backup importado.');
-        location.reload();
+        mostrarToast('Backup importado.', 'exito');
+        setTimeout(() => location.reload(), 1200);
       }
     } catch (error) {
-      alert('Archivo inválido.');
+      mostrarAviso('Archivo inválido.', 'error');
     }
   };
   reader.readAsText(file);
   event.target.value = '';
 }
 
-export function limpiarTodo() {
-  if (confirm('¿Eliminar TODOS los registros?')) {
+export async function limpiarTodo() {
+  if (await pedirConfirmacion('¿Eliminar TODOS los registros?')) {
     resetState();
     guardarDatos();
-    alert('Datos eliminados');
-    location.reload();
+    mostrarToast('Datos eliminados', 'exito');
+    setTimeout(() => location.reload(), 1200);
   }
 }

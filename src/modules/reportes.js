@@ -5,6 +5,7 @@ const XLSX = window.XLSX;
 import { formatearFecha, formatearMonto, escapeHtml } from '../utils/format.js';
 import { formatearRutParaMostrar } from '../utils/rut.js';
 import { descargarArchivo } from '../utils/download.js';
+import { mostrarAviso } from '../ui/notificaciones.js';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -319,7 +320,7 @@ export function descargarExcel() {
   const filtered = filtrarPacientes(filtros);
 
   if (filtered.length === 0) {
-    alert('No hay registros que coincidan con los filtros.');
+    mostrarAviso('No hay registros que coincidan con los filtros.', 'advertencia');
     return;
   }
 
