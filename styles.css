@@ -330,6 +330,23 @@ label {
 
 .advanced-filters > div { flex: 1; min-width: 160px; }
 
+/* VERIFICADOR DE RUT */
+.rut-input-wrap { position: relative; }
+.rut-input-wrap input { padding-right: 36px; }
+.rut-status {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  pointer-events: none;
+  animation: rutStatusAparecer 0.15s ease;
+}
+@keyframes rutStatusAparecer {
+  from { opacity: 0; transform: translateY(-50%) scale(0.6); }
+  to { opacity: 1; transform: translateY(-50%) scale(1); }
+}
+
 /* BOTONES */
 .btn-primary, .btn-secondary {
   padding: 13px 26px;

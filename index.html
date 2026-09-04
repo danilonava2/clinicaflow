@@ -199,7 +199,12 @@
           <div class="form-grid">
             <div><label>📅 Fecha</label><input type="date" id="fecha" required></div>
             <div><label>👤 Paciente</label><input type="text" id="nombre" required placeholder="Nombre completo"></div>
-            <div><label>🆔 RUT</label><input type="text" id="rut" placeholder="12.345.678-9" required></div>
+            <div><label>🆔 RUT</label>
+              <div class="rut-input-wrap">
+                <input type="text" id="rut" placeholder="12.345.678-9" required>
+                <span class="rut-status" id="rutStatus"></span>
+              </div>
+            </div>
             <div><label>🏥 Centro de Atención</label>
               <select id="selectInstitucion" required>
                 <option value="">-- Seleccionar centro --</option>
@@ -227,7 +232,12 @@
           <div><label>📅 Desde</label><input type="date" id="busquedaFechaInicio"></div>
           <div><label>📅 Hasta</label><input type="date" id="busquedaFechaFin"></div>
           <div><label>👤 Paciente</label><input type="text" id="busquedaNombre" placeholder="Nombre"></div>
-          <div><label>🆔 RUT</label><input type="text" id="busquedaRut" placeholder="RUT"></div>
+          <div><label>🆔 RUT</label>
+            <div class="rut-input-wrap">
+              <input type="text" id="busquedaRut" placeholder="RUT">
+              <span class="rut-status" id="busquedaRutStatus"></span>
+            </div>
+          </div>
           <div><label>🏥 Centro</label><select id="busquedaInstitucionSelect"><option value="">Todos los centros</option></select></div>
           <div><label>🩺 Previsión</label><select id="busquedaPrevisionSelect"><option value="">Todas las previsiones</option></select></div>
           <button onclick="buscarPacientes()" class="btn-primary">🔍 Buscar</button>
@@ -284,7 +294,12 @@
           <div><label>📅 Desde</label><input type="date" id="fechaInicio"></div>
           <div><label>📅 Hasta</label><input type="date" id="fechaFin"></div>
           <div><label>👤 Paciente</label><input type="text" id="reporteNombre" placeholder="Nombre"></div>
-          <div><label>🆔 RUT</label><input type="text" id="reporteRut" placeholder="RUT"></div>
+          <div><label>🆔 RUT</label>
+            <div class="rut-input-wrap">
+              <input type="text" id="reporteRut" placeholder="RUT">
+              <span class="rut-status" id="reporteRutStatus"></span>
+            </div>
+          </div>
           <div><label>🏥 Centro</label><select id="filtroInstitucionSelect"><option value="">Todos los centros</option></select></div>
           <button onclick="generarReporte()" class="btn-primary">📄 Generar</button>
           <button onclick="descargarExcel()" class="btn-secondary">📥 Excel</button>
@@ -322,7 +337,11 @@
     <input type="hidden" id="editId">
     <label>Fecha</label><input type="date" id="editFecha">
     <label>Paciente</label><input type="text" id="editNombre">
-    <label>RUT</label><input type="text" id="editRut">
+    <label>RUT</label>
+    <div class="rut-input-wrap">
+      <input type="text" id="editRut">
+      <span class="rut-status" id="editRutStatus"></span>
+    </div>
     <label>Centro</label><select id="editSelectInstitucion"></select>
     <label>Previsión</label><select id="editSelectPrevision"></select>
     <label>Monto</label><input type="number" id="editMonto">

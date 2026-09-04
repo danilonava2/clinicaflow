@@ -29,6 +29,22 @@ export function formatearRutInput(input) {
   }
 }
 
+// Muestra un ✅/❌ junto al campo mientras se escribe. No bloquea nada por
+// si solo (los formularios de datos siguen validando al enviar); es solo
+// feedback visual, util tambien en los campos de busqueda por RUT parcial.
+export function actualizarIndicadorRUT(inputId, statusId) {
+  const input = document.getElementById(inputId);
+  const status = document.getElementById(statusId);
+  if (!input || !status) return;
+
+  const limpio = input.value.replace(/[^0-9kK]/g, '');
+  if (limpio.length < 7) {
+    status.innerHTML = '';
+    return;
+  }
+  status.innerHTML = validarRUT(input.value) ? '✅' : '❌';
+}
+
 export function formatearRutParaMostrar(rut) {
   if (!rut || rut.includes('-')) return rut || '';
   const rutLimpio = rut.replace(/[^0-9kK]/g, '');

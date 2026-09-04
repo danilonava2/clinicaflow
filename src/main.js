@@ -1,7 +1,7 @@
 import './firebase/config.js';
 import { state, iniciarSincronizacion, detenerSincronizacion, resetState } from './store.js';
 import * as authService from './firebase/authService.js';
-import { formatearRutInput } from './utils/rut.js';
+import { formatearRutInput, actualizarIndicadorRUT } from './utils/rut.js';
 import { iniciarControlInactividad, detenerControlInactividad } from './utils/inactivityTimer.js';
 import { setupNavigation, initMobileMenu, seleccionarSeccion, toggleConfigMenu } from './ui/navigation.js';
 import { confirmarAccion, cerrarAviso, mostrarAviso } from './ui/notificaciones.js';
@@ -257,8 +257,16 @@ Object.assign(window, {
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
   document.getElementById('formPaciente')?.addEventListener('submit', registrarAtencion);
-  document.getElementById('rut')?.addEventListener('input', (e) => formatearRutInput(e.target));
-  document.getElementById('busquedaRut')?.addEventListener('input', (e) => formatearRutInput(e.target));
+  document.getElementById('rut')?.addEventListener('input', (e) => {
+    formatearRutInput(e.target);
+    actualizarIndicadorRUT('rut', 'rutStatus');
+  });
+  document.getElementById('busquedaRut')?.addEventListener('input', (e) => {
+    formatearRutInput(e.target);
+    actualizarIndicadorRUT('busquedaRut', 'busquedaRutStatus');
+  });
+  document.getElementById('editRut')?.addEventListener('input', () => actualizarIndicadorRUT('editRut', 'editRutStatus'));
+  document.getElementById('reporteRut')?.addEventListener('input', () => actualizarIndicadorRUT('reporteRut', 'reporteRutStatus'));
 
   document.getElementById('selectInstitucion')?.addEventListener('change', () =>
     actualizarPrevisionesDisponibles('selectInstitucion', 'selectPrevision')

@@ -1,5 +1,5 @@
 import { state, guardarDatos } from '../store.js';
-import { validarRUT } from '../utils/rut.js';
+import { validarRUT, actualizarIndicadorRUT } from '../utils/rut.js';
 import { formatearFecha, formatearMonto, escapeHtml } from '../utils/format.js';
 import { formatearRutParaMostrar } from '../utils/rut.js';
 import { abrirModalDuplicado, cerrarModalDuplicado, getPendingDuplicateData } from '../ui/modals.js';
@@ -90,6 +90,7 @@ export function registrarDuplicadoConfirmado() {
     document.getElementById('formPaciente').reset();
     document.getElementById('fecha').valueAsDate = new Date();
     actualizarPrevisionesDisponibles('selectInstitucion', 'selectPrevision');
+    actualizarIndicadorRUT('rut', 'rutStatus');
     cerrarModalDuplicado();
   }
 }
@@ -130,6 +131,7 @@ export function registrarAtencion(event) {
     event.target.reset();
     document.getElementById('fecha').valueAsDate = new Date();
     actualizarPrevisionesDisponibles('selectInstitucion', 'selectPrevision');
+    actualizarIndicadorRUT('rut', 'rutStatus');
   }
 }
 
@@ -205,6 +207,7 @@ export function limpiarFiltrosBusqueda() {
   if (sel) sel.value = '';
   const selPrevision = document.getElementById('busquedaPrevisionSelect');
   if (selPrevision) selPrevision.value = '';
+  actualizarIndicadorRUT('busquedaRut', 'busquedaRutStatus');
   buscarPacientes(1);
 }
 
@@ -215,6 +218,7 @@ export function editarRegistro(id) {
   document.getElementById('editFecha').value = p.fecha;
   document.getElementById('editNombre').value = p.nombre;
   document.getElementById('editRut').value = p.rut;
+  actualizarIndicadorRUT('editRut', 'editRutStatus');
   const sel = document.getElementById('editSelectInstitucion');
   if (sel) sel.value = p.institucion;
   actualizarPrevisionesDisponibles('editSelectInstitucion', 'editSelectPrevision');
