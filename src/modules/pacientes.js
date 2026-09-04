@@ -143,6 +143,7 @@ export function buscarPacientes(page = 1) {
   const nom = document.getElementById('busquedaNombre').value.trim().toLowerCase();
   const rut = document.getElementById('busquedaRut').value.trim().toLowerCase();
   const inst = document.getElementById('busquedaInstitucionSelect').value;
+  const prevision = document.getElementById('busquedaPrevisionSelect').value;
   const start = fi ? new Date(fi) : null;
   const end = ff ? new Date(ff) : null;
   if (end) end.setHours(23, 59, 59);
@@ -153,7 +154,8 @@ export function buscarPacientes(page = 1) {
       (!start || !end || (fecha >= start && fecha <= end)) &&
       (!nom || p.nombre.toLowerCase().includes(nom)) &&
       (!rut || p.rut.toLowerCase().includes(rut)) &&
-      (!inst || p.institucion === inst)
+      (!inst || p.institucion === inst) &&
+      (!prevision || p.prevision === prevision)
     );
   });
 
@@ -205,6 +207,8 @@ export function limpiarFiltrosBusqueda() {
   });
   const sel = document.getElementById('busquedaInstitucionSelect');
   if (sel) sel.value = '';
+  const selPrevision = document.getElementById('busquedaPrevisionSelect');
+  if (selPrevision) selPrevision.value = '';
   buscarPacientes(1);
 }
 

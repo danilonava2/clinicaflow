@@ -247,20 +247,22 @@ export function actualizarSelectCentros() {
 }
 
 export function actualizarSelectPrevisionDashboard() {
-  const select = document.getElementById('dashPrevisionSelect');
-  if (!select) return;
   const nombres = new Set();
   state.centros.forEach((c) => c.previsiones.forEach((p) => nombres.add(p.nombre)));
-  select.innerHTML = '<option value="">Todas las previsiones</option>';
-  Array.from(nombres)
-    .sort()
-    .forEach((nombre) => {
+  const nombresOrdenados = Array.from(nombres).sort();
+
+  ['dashPrevisionSelect', 'busquedaPrevisionSelect'].forEach((id) => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    select.innerHTML = '<option value="">Todas las previsiones</option>';
+    nombresOrdenados.forEach((nombre) => {
       const opt = document.createElement('option');
       opt.value = nombre;
       opt.textContent = nombre;
       select.appendChild(opt);
     });
-  select.value = '';
+    select.value = '';
+  });
 }
 
 export function migrarCentrosDesdePacientes() {
