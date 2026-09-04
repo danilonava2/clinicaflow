@@ -88,3 +88,11 @@ onAuthStateChanged(auth, (user) => {
 });
 
 Object.assign(window, { adminLogin, adminLogout });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((error) => {
+      console.error('Error al registrar el service worker:', error);
+    });
+  });
+}

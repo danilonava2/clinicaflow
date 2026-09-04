@@ -1,15 +1,18 @@
-const CACHE_NAME = 'clinicaflow-shell-v1';
+const CACHE_NAME = 'clinicaflow-shell-v2';
 
 const APP_SHELL = [
   './',
   './index.html',
+  './admin.html',
   './styles.css',
   './favicon.png',
   './logo-clinicaflow.png',
   './manifest.webmanifest',
+  './admin-manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './src/main.js',
+  './src/admin.js',
   './src/store.js',
   './src/firebase/config.js',
   './src/firebase/authService.js',
@@ -18,6 +21,7 @@ const APP_SHELL = [
   './src/firebase/realtimeDataService.js',
   './src/ui/navigation.js',
   './src/ui/modals.js',
+  './src/ui/notificaciones.js',
   './src/modules/centros.js',
   './src/modules/pacientes.js',
   './src/modules/dashboard.js',
@@ -25,7 +29,10 @@ const APP_SHELL = [
   './src/modules/backup.js',
   './src/utils/rut.js',
   './src/utils/format.js',
-  './src/utils/download.js'
+  './src/utils/download.js',
+  './src/utils/fechas.js',
+  './src/utils/tema.js',
+  './src/utils/inactivityTimer.js'
 ];
 
 self.addEventListener('install', (event) => {
