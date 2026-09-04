@@ -228,6 +228,11 @@
     <div id="section-buscar" class="section">
       <h2>🔍 Buscar Atenciones</h2>
       <div class="card">
+        <div class="filtros-rapidos">
+          <button type="button" onclick="aplicarRangoBusqueda('hoy')" class="btn-chip">Hoy</button>
+          <button type="button" onclick="aplicarRangoBusqueda('semana')" class="btn-chip">Esta semana</button>
+          <button type="button" onclick="aplicarRangoBusqueda('mes')" class="btn-chip">Este mes</button>
+        </div>
         <div class="advanced-filters">
           <div><label>📅 Desde</label><input type="date" id="busquedaFechaInicio"></div>
           <div><label>📅 Hasta</label><input type="date" id="busquedaFechaFin"></div>
@@ -252,6 +257,11 @@
     <div id="section-dashboard" class="section">
       <h2>📊 Dashboard de Ingresos</h2>
       <div class="card">
+        <div class="filtros-rapidos">
+          <button type="button" onclick="aplicarRangoDashboard('hoy')" class="btn-chip">Hoy</button>
+          <button type="button" onclick="aplicarRangoDashboard('semana')" class="btn-chip">Esta semana</button>
+          <button type="button" onclick="aplicarRangoDashboard('mes')" class="btn-chip">Este mes</button>
+        </div>
         <div class="advanced-filters">
           <div><label>📅 Desde</label><input type="date" id="dashFechaInicio"></div>
           <div><label>📅 Hasta</label><input type="date" id="dashFechaFin"></div>

@@ -2,6 +2,7 @@ import './firebase/config.js';
 import { state, iniciarSincronizacion, detenerSincronizacion, resetState } from './store.js';
 import * as authService from './firebase/authService.js';
 import { formatearRutInput, actualizarIndicadorRUT } from './utils/rut.js';
+import { calcularRangoRapido } from './utils/fechas.js';
 import { iniciarControlInactividad, detenerControlInactividad } from './utils/inactivityTimer.js';
 import { setupNavigation, initMobileMenu, seleccionarSeccion, toggleConfigMenu } from './ui/navigation.js';
 import { confirmarAccion, cerrarAviso, mostrarAviso } from './ui/notificaciones.js';
@@ -62,6 +63,22 @@ function actualizarInfoUsuario(email) {
   document.getElementById('userEmailDisplay').innerText = email;
   const mobileUserInfo = document.getElementById('mobileUserInfo');
   if (mobileUserInfo) mobileUserInfo.innerHTML = email;
+}
+
+function aplicarRangoBusqueda(tipo) {
+  const rango = calcularRangoRapido(tipo);
+  if (!rango) return;
+  document.getElementById('busquedaFechaInicio').value = rango.inicio;
+  document.getElementById('busquedaFechaFin').value = rango.fin;
+  buscarPacientes(1);
+}
+
+function aplicarRangoDashboard(tipo) {
+  const rango = calcularRangoRapido(tipo);
+  if (!rango) return;
+  document.getElementById('dashFechaInicio').value = rango.inicio;
+  document.getElementById('dashFechaFin').value = rango.fin;
+  cargarDashboard();
 }
 
 function mostrarPantallaInicial() {
@@ -221,7 +238,9 @@ Object.assign(window, {
   seleccionarSeccion,
   buscarPacientes,
   limpiarFiltrosBusqueda,
+  aplicarRangoBusqueda,
   cargarDashboard,
+  aplicarRangoDashboard,
   generarReporte,
   descargarReportePDF,
   descargarExcel,

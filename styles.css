@@ -330,6 +330,27 @@ label {
 
 .advanced-filters > div { flex: 1; min-width: 160px; }
 
+/* FILTROS RAPIDOS DE FECHA */
+.filtros-rapidos {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.btn-chip {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+.btn-chip:hover { background: #dbeafe; }
+.btn-chip:active { transform: scale(0.95); }
+
 /* VERIFICADOR DE RUT */
 .rut-input-wrap { position: relative; }
 .rut-input-wrap input { padding-right: 36px; }
