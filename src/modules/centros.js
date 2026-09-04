@@ -10,8 +10,15 @@ export function renderListaCentros() {
     container.innerHTML = '<p>No hay centros agregados. Agrega los lugares donde atiendes.</p>';
     return;
   }
+  const mesActual = new Date().toISOString().substring(0, 7);
+
   let html = '<div class="centros-grid">';
   state.centros.forEach((centro, index) => {
+    const registrosDelMes = state.pacientes.filter(
+      (p) => p.institucion === centro.nombre && p.fecha?.substring(0, 7) === mesActual
+    );
+    const totalIngresosDelMes = registrosDelMes.reduce((s, p) => s + (Number(p.monto) || 0), 0);
+
     html += `<div class="centro-card">
       <div class="centro-header">
         <span>🏥 ${escapeHtml(centro.nombre)}</span>
@@ -19,6 +26,10 @@ export function renderListaCentros() {
           <button onclick="editarCentro(${index})" class="btn-edit" style="margin-right:5px;">✏️</button>
           <button onclick="eliminarCentro(${index})" class="btn-delete">🗑️</button>
         </div>
+      </div>
+      <div class="centro-stats">
+        <span>📅 Este mes: ${registrosDelMes.length} atención${registrosDelMes.length === 1 ? '' : 'es'}</span>
+        <span>💰 ${formatearMonto(totalIngresosDelMes)}</span>
       </div>
       <div class="previsiones-list">`;
 

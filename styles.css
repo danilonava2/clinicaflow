@@ -582,6 +582,14 @@ label {
   align-items: center;
   font-weight: 600;
 }
+.centro-stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
 .previsiones-list {
   margin-top: 12px;
   padding-top: 12px;
