@@ -927,3 +927,123 @@ label {
   label { font-size: 13px; }
   .chart-container canvas { max-height: 180px !important; }
 }
+
+/* ==================== MODO OSCURO ==================== */
+:root[data-theme="dark"] body {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] h2,
+:root[data-theme="dark"] h3 {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .modal-content,
+:root[data-theme="dark"] .welcome-card,
+:root[data-theme="dark"] .login-card,
+:root[data-theme="dark"] .toast-card,
+:root[data-theme="dark"] .chart-card,
+:root[data-theme="dark"] .tabla-resultados {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .chart-card,
+:root[data-theme="dark"] .centro-card,
+:root[data-theme="dark"] .reporte-desglose-card,
+:root[data-theme="dark"] .prevision-item {
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .centro-card,
+:root[data-theme="dark"] .reporte-desglose-card {
+  background: #17233b;
+}
+
+:root[data-theme="dark"] .prevision-item {
+  background: #1e293b;
+}
+
+:root[data-theme="dark"] label,
+:root[data-theme="dark"] .login-card .form-group label,
+:root[data-theme="dark"] .modal-content label,
+:root[data-theme="dark"] .welcome-subtitle,
+:root[data-theme="dark"] .feature-text p,
+:root[data-theme="dark"] .stat-label,
+:root[data-theme="dark"] .centro-stats,
+:root[data-theme="dark"] .descuento-linea,
+:root[data-theme="dark"] .toast-mensaje,
+:root[data-theme="dark"] .aviso-modal-content p,
+:root[data-theme="dark"] .opciones-eliminar-centro label,
+:root[data-theme="dark"] .reporte-desglose-card h4,
+:root[data-theme="dark"] .chart-card h4 {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .welcome-card h2,
+:root[data-theme="dark"] .feature-text h3,
+:root[data-theme="dark"] .stat-value,
+:root[data-theme="dark"] .reporte-encabezado h3,
+:root[data-theme="dark"] .descuento-subtotal {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] .login-card .form-group input {
+  background: #334155;
+  color: #f1f5f9;
+  border-color: #475569;
+}
+:root[data-theme="dark"] input::placeholder { color: #94a3b8; }
+
+:root[data-theme="dark"] .modal-content h2,
+:root[data-theme="dark"] .modal-content h3 {
+  border-bottom-color: #334155;
+}
+
+:root[data-theme="dark"] .stat-card {
+  background: linear-gradient(135deg, #1e293b, #1e3a5f);
+}
+
+:root[data-theme="dark"] .tabla-resultados td {
+  border-bottom-color: #334155;
+}
+
+:root[data-theme="dark"] .previsiones-list,
+:root[data-theme="dark"] .descuento-subtotal {
+  border-color: #475569;
+}
+
+:root[data-theme="dark"] .reporte-encabezado {
+  border-bottom-color: #334155;
+}
+
+:root[data-theme="dark"] .reporte-vacio {
+  color: #64748b;
+}
+
+:root[data-theme="dark"] .reporte-badge {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+
+:root[data-theme="dark"] .btn-chip {
+  background: #1e3a5f;
+  color: #93c5fd;
+  border-color: #2c5282;
+}
+:root[data-theme="dark"] .btn-chip:hover { background: #234876; }
+
+:root[data-theme="dark"] .reporte-total,
+:root[data-theme="dark"] .descuento-final {
+  background: linear-gradient(135deg, #14291d, #163821);
+  border-color: #1f4a2c;
+}
+
+:root[data-theme="dark"] .aviso-modal-content,
+:root[data-theme="dark"] .modal-content {
+  box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+}

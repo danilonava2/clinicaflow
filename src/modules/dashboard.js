@@ -1,5 +1,6 @@
 import { state } from '../store.js';
 import { formatearMonto } from '../utils/format.js';
+import { esModoOscuro } from '../utils/tema.js';
 
 const Chart = window.Chart;
 
@@ -114,11 +115,15 @@ export function cargarDashboard() {
   renderGraficos(data);
 }
 
-const GRID_RECESIVO = { color: '#e1e0d9', drawTicks: false };
-const EJE_RECESIVO = { color: '#c3c2b7' };
-
 function renderGraficos(data) {
   const { meses, pacientesData, montoData } = agruparPorMes(data);
+
+  const oscuro = esModoOscuro();
+  const colorGrid = oscuro ? '#334155' : '#e1e0d9';
+  const colorEje = oscuro ? '#475569' : '#c3c2b7';
+  const colorTexto = oscuro ? '#94a3b8' : '#52514e';
+  const gridRecesivo = { color: colorGrid, drawTicks: false };
+  const tickTexto = { color: colorTexto };
 
   const ctxIngresos = document.getElementById('ingresosChart')?.getContext('2d');
   if (ctxIngresos) {
@@ -137,8 +142,13 @@ function renderGraficos(data) {
           tooltip: { callbacks: { label: (ctx) => formatearMonto(ctx.raw) } }
         },
         scales: {
-          y: { beginAtZero: true, grid: GRID_RECESIVO, border: { color: EJE_RECESIVO.color }, ticks: { callback: (v) => formatearMonto(v) } },
-          x: { grid: { display: false }, border: { color: EJE_RECESIVO.color } }
+          y: {
+            beginAtZero: true,
+            grid: gridRecesivo,
+            border: { color: colorEje },
+            ticks: { ...tickTexto, callback: (v) => formatearMonto(v) }
+          },
+          x: { grid: { display: false }, border: { color: colorEje }, ticks: tickTexto }
         }
       }
     });
@@ -158,8 +168,8 @@ function renderGraficos(data) {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: true, ticks: { precision: 0 }, grid: GRID_RECESIVO, border: { color: EJE_RECESIVO.color } },
-          x: { grid: { display: false }, border: { color: EJE_RECESIVO.color } }
+          y: { beginAtZero: true, grid: gridRecesivo, border: { color: colorEje }, ticks: { ...tickTexto, precision: 0 } },
+          x: { grid: { display: false }, border: { color: colorEje }, ticks: tickTexto }
         }
       }
     });
@@ -182,20 +192,24 @@ function renderGraficos(data) {
 
 function crearDonut(ctx, entradas) {
   const isMobile = window.innerWidth <= 768;
+  const oscuro = esModoOscuro();
   const labels = entradas.map(([label]) => label);
   const valores = entradas.map(([, valor]) => valor);
   const colores = entradas.map(([label], i) => (label === 'Otros' ? COLOR_OTROS : PALETA_CATEGORICA[i % PALETA_CATEGORICA.length]));
 
   return new Chart(ctx, {
     type: 'doughnut',
-    data: { labels, datasets: [{ data: valores, backgroundColor: colores, borderColor: '#ffffff', borderWidth: 2 }] },
+    data: {
+      labels,
+      datasets: [{ data: valores, backgroundColor: colores, borderColor: oscuro ? '#1e293b' : '#ffffff', borderWidth: 2 }]
+    },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
           position: isMobile ? 'bottom' : 'right',
-          labels: { boxWidth: 10, font: { size: isMobile ? 9 : 11 }, color: '#52514e' }
+          labels: { boxWidth: 10, font: { size: isMobile ? 9 : 11 }, color: oscuro ? '#94a3b8' : '#52514e' }
         },
         tooltip: { callbacks: { label: (ctx2) => `${ctx2.label}: ${formatearMonto(ctx2.raw)}` } }
       }

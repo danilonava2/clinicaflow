@@ -102,6 +102,7 @@
     </div>
     <div id="configPanel" class="mobile-config-panel" style="display: none;">
       <div class="mobile-menu-buttons mobile-secondary">
+        <button onclick="toggleTema()" class="mobile-menu-btn" style="background:#0f172a;"><span class="theme-toggle-texto">🌙 Modo Oscuro</span></button>
         <button onclick="exportarBackup()" class="mobile-menu-btn backup-btn">⬇️ Backup</button>
         <button onclick="document.getElementById('importFile').click()" class="mobile-menu-btn import-btn">⬆️ Restaurar</button>
         <button onclick="limpiarTodo()" class="mobile-menu-btn clear-btn">🗑️ Limpiar</button>
@@ -131,6 +132,7 @@
         <span id="contador-registros">0 registros</span>
       </div>
 
+      <a href="#" onclick="toggleTema()" class="menu-item" style="background:#0f172a;color:white;"><span class="theme-toggle-texto">🌙 Modo Oscuro</span></a>
       <a href="#" onclick="exportarBackup()" class="menu-item" style="background:#8b5cf6;color:white;">⬇️ Exportar Backup</a>
       <a href="#" onclick="document.getElementById('importFile').click()" class="menu-item" style="background:#f59e0b;color:white;">⬆️ Importar Backup</a>
       <a href="#" onclick="limpiarTodo()" class="menu-item" style="margin-top:10px;background:#64748b;color:white;">🗑️ Limpiar Datos</a>

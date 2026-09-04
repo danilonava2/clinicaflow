@@ -3,6 +3,7 @@ import { state, iniciarSincronizacion, detenerSincronizacion, resetState } from 
 import * as authService from './firebase/authService.js';
 import { formatearRutInput, actualizarIndicadorRUT } from './utils/rut.js';
 import { calcularRangoRapido } from './utils/fechas.js';
+import { aplicarTemaGuardado, alternarTema } from './utils/tema.js';
 import { iniciarControlInactividad, detenerControlInactividad } from './utils/inactivityTimer.js';
 import { setupNavigation, initMobileMenu, seleccionarSeccion, toggleConfigMenu } from './ui/navigation.js';
 import { confirmarAccion, cerrarAviso, mostrarAviso } from './ui/notificaciones.js';
@@ -79,6 +80,15 @@ function aplicarRangoDashboard(tipo) {
   document.getElementById('dashFechaInicio').value = rango.inicio;
   document.getElementById('dashFechaFin').value = rango.fin;
   cargarDashboard();
+}
+
+function toggleTema() {
+  alternarTema();
+  // Los graficos dibujan su cuadricula/texto con colores fijos en JS; hay
+  // que redibujarlos si el Dashboard esta visible al cambiar de tema.
+  if (document.getElementById('section-dashboard')?.classList.contains('active')) {
+    cargarDashboard();
+  }
 }
 
 function mostrarPantallaInicial() {
@@ -241,6 +251,7 @@ Object.assign(window, {
   aplicarRangoBusqueda,
   cargarDashboard,
   aplicarRangoDashboard,
+  toggleTema,
   generarReporte,
   descargarReportePDF,
   descargarExcel,
@@ -274,6 +285,7 @@ Object.assign(window, {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  aplicarTemaGuardado();
   initializeApp();
   document.getElementById('formPaciente')?.addEventListener('submit', registrarAtencion);
   document.getElementById('rut')?.addEventListener('input', (e) => {
