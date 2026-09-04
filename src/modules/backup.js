@@ -1,8 +1,15 @@
-import { state, guardarDatos, resetState } from '../store.js';
+import { state, guardarDatos, resetState, esPlanPro } from '../store.js';
 import { descargarArchivo } from '../utils/download.js';
 import { mostrarAviso, mostrarToast, pedirConfirmacion } from '../ui/notificaciones.js';
 
 export function exportarBackup() {
+  if (!esPlanPro()) {
+    mostrarAviso(
+      'El respaldo autoservicio es una función del plan Pro. Si necesitas una copia de tus datos, contáctanos.',
+      'advertencia'
+    );
+    return;
+  }
   if (state.pacientes.length === 0) {
     mostrarAviso('No hay datos para exportar.', 'advertencia');
     return;

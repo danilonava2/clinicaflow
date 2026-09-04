@@ -5,8 +5,18 @@ import { centrosPorDefecto } from './firebase/realtimeDataService.js';
 export const state = {
   currentUser: null,
   pacientes: [],
-  centros: []
+  centros: [],
+  plan: 'gratis'
 };
+
+export const LIMITES_PLAN_GRATIS = {
+  centros: 1,
+  registros: 25
+};
+
+export function esPlanPro() {
+  return state.plan === 'pro';
+}
 
 let detenerEscucha = null;
 
@@ -31,9 +41,10 @@ export function iniciarSincronizacion(uid, onDatosActualizados) {
     () =>
       new Promise((resolve) => {
         let esPrimeraVez = true;
-        detenerEscucha = escucharDatosUsuario(uid, ({ pacientes, centros }) => {
+        detenerEscucha = escucharDatosUsuario(uid, ({ pacientes, centros, plan }) => {
           state.pacientes = pacientes;
           state.centros = normalizarCentros(centros.length ? centros : centrosPorDefecto());
+          state.plan = plan || 'gratis';
           onDatosActualizados(esPrimeraVez);
           if (esPrimeraVez) {
             esPrimeraVez = false;
@@ -66,4 +77,5 @@ export async function guardarDatos() {
 export function resetState() {
   state.pacientes = [];
   state.centros = normalizarCentros(centrosPorDefecto());
+  state.plan = 'gratis';
 }

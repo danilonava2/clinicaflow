@@ -1,6 +1,7 @@
 import './firebase/config.js';
 import { state, iniciarSincronizacion, detenerSincronizacion, resetState } from './store.js';
 import * as authService from './firebase/authService.js';
+import { guardarInfoUsuario } from './firebase/firestoreDataService.js';
 import { formatearRutInput, actualizarIndicadorRUT } from './utils/rut.js';
 import { calcularRangoRapido } from './utils/fechas.js';
 import { aplicarTemaGuardado, alternarTema } from './utils/tema.js';
@@ -111,6 +112,9 @@ async function onSesionIniciada(user) {
   state.currentUser = user;
   mostrarPantallaApp();
   actualizarInfoUsuario(user.email);
+  guardarInfoUsuario(user.uid, { email: user.email }).catch((error) =>
+    console.error('Error al guardar el correo del usuario:', error)
+  );
 
   // Flag local a esta sesion de login: evita inicializar la pantalla dos
   // veces si el primer dato tarda mas de 10s en llegar (el timeout de abajo

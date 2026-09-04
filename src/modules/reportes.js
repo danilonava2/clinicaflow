@@ -1,4 +1,4 @@
-import { state } from '../store.js';
+import { state, esPlanPro } from '../store.js';
 
 const { jsPDF } = window.jspdf;
 const XLSX = window.XLSX;
@@ -61,6 +61,10 @@ function renderDesgloseTabla(titulo, grupos) {
 }
 
 export function generarReporte(page = 1) {
+  if (!esPlanPro()) {
+    mostrarAviso('Los reportes son una función del plan Pro. Actualiza tu plan para generarlos.', 'advertencia');
+    return;
+  }
   const filtros = obtenerFiltros();
   const rows = filtrarPacientes(filtros);
   currentReportRows = rows;
@@ -316,6 +320,10 @@ export function descargarReportePDF() {
 }
 
 export function descargarExcel() {
+  if (!esPlanPro()) {
+    mostrarAviso('Exportar a Excel es una función del plan Pro. Actualiza tu plan para usarla.', 'advertencia');
+    return;
+  }
   const filtros = obtenerFiltros();
   const filtered = filtrarPacientes(filtros);
 

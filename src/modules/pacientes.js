@@ -1,4 +1,4 @@
-import { state, guardarDatos } from '../store.js';
+import { state, guardarDatos, esPlanPro, LIMITES_PLAN_GRATIS } from '../store.js';
 import { validarRUT, actualizarIndicadorRUT } from '../utils/rut.js';
 import { formatearFecha, formatearMonto, escapeHtml } from '../utils/format.js';
 import { formatearRutParaMostrar } from '../utils/rut.js';
@@ -97,6 +97,13 @@ export function registrarDuplicadoConfirmado() {
 
 export function registrarAtencion(event) {
   event.preventDefault();
+  if (!esPlanPro() && state.pacientes.length >= LIMITES_PLAN_GRATIS.registros) {
+    mostrarAviso(
+      `Alcanzaste el límite de ${LIMITES_PLAN_GRATIS.registros} registros del plan gratis. Actualiza a Pro para seguir registrando atenciones.`,
+      'advertencia'
+    );
+    return;
+  }
   const rut = document.getElementById('rut').value;
   if (!validarRUT(rut)) {
     mostrarAviso('RUT inválido.', 'error');

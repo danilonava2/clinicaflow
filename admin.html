@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClinicaFlow - Admin</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="styles.css">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app": "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js",
+      "firebase/auth": "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js",
+      "firebase/database": "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js",
+      "firebase/firestore": "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"
+    }
+  }
+  </script>
+</head>
+<body>
+
+<div id="loginScreen" class="login-container">
+  <div class="login-card">
+    <div style="text-align:center; margin-bottom:20px;">
+      <img src="logo-clinicaflow.png" alt="ClinicaFlow" style="max-width:180px;">
+      <h2 style="color:#1e2937; margin-top:10px;">🔐 Panel de Administrador</h2>
+    </div>
+    <div class="form-group">
+      <label>📧 Correo</label>
+      <input type="email" id="adminEmail" placeholder="tu@email.com">
+    </div>
+    <div class="form-group">
+      <label>🔒 Contraseña</label>
+      <input type="password" id="adminPassword" placeholder="••••••••">
+    </div>
+    <button onclick="adminLogin()" class="btn-primary btn-block">Entrar</button>
+  </div>
+</div>
+
+<div id="noAutorizado" style="display:none; text-align:center; margin-top:100px;">
+  <h2>⛔ No autorizado</h2>
+  <p style="color:#64748b; margin:15px 0;">Esta cuenta no tiene acceso al panel de administrador.</p>
+  <button onclick="adminLogout()" class="btn-secondary">Cerrar sesión</button>
+</div>
+
+<div id="panelAdmin" style="display:none; max-width:1000px; margin:40px auto; padding:0 20px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>👑 Usuarios de ClinicaFlow</h2>
+    <button onclick="adminLogout()" class="btn-secondary">🚪 Cerrar sesión</button>
+  </div>
+  <div class="card">
+    <div id="listaUsuarios">Cargando...</div>
+  </div>
+</div>
+
+<script type="module" src="./src/admin.js"></script>
+</body>
+</html>

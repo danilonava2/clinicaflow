@@ -1,8 +1,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function esAdmin() {
+      return request.auth != null && request.auth.uid == 'VJEehVVQdpVgQqd5g6X6r9xxnyr2';
+    }
+
     match /usuarios/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write, list: if esAdmin();
 
       match /pacientes/{pacienteId} {
         allow read, write: if request.auth != null && request.auth.uid == uid;

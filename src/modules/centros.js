@@ -1,4 +1,4 @@
-import { state, guardarDatos } from '../store.js';
+import { state, guardarDatos, esPlanPro, LIMITES_PLAN_GRATIS } from '../store.js';
 import { escapeHtml, formatearMonto } from '../utils/format.js';
 import { cargarDashboard } from './dashboard.js';
 import { buscarPacientes } from './pacientes.js';
@@ -202,6 +202,13 @@ export async function confirmarEliminarCentro() {
 
 // ==================== AGREGAR CENTRO ====================
 export function agregarCentro() {
+  if (!esPlanPro() && state.centros.length >= LIMITES_PLAN_GRATIS.centros) {
+    mostrarAviso(
+      `El plan gratis permite solo ${LIMITES_PLAN_GRATIS.centros} centro de atención. Actualiza a Pro para agregar más.`,
+      'advertencia'
+    );
+    return;
+  }
   const input = document.getElementById('nuevoCentro');
   const nombre = input.value.trim();
   if (!nombre) {
