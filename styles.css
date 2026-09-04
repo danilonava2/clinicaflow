@@ -686,6 +686,15 @@ label {
 .stat-icon { font-size: 32px; }
 .stat-label { font-size: 12px; color: #64748b; display: block; }
 .stat-value { font-size: 20px; font-weight: bold; color: #1e2937; display: block; }
+.stat-delta {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+  color: #64748b;
+}
+.stat-delta-sube { color: #16a34a; }
+.stat-delta-baja { color: #dc2626; }
 
 /* REPORTES */
 @keyframes fadeInUp {

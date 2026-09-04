@@ -37,6 +37,38 @@ function agruparConOtros(data, obtenerClave) {
   return [...principales, ['Otros', restoTotal]];
 }
 
+// Compara el mes calendario actual vs. el anterior (respeta los filtros de
+// centro/prevision, pero no el rango de fechas: es un KPI fijo aparte).
+function actualizarComparativaMensual(centro, prevision) {
+  const ahora = new Date();
+  const mesActual = ahora.toISOString().substring(0, 7);
+  const mesAnteriorDate = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
+  const mesAnterior = mesAnteriorDate.toISOString().substring(0, 7);
+
+  const coincideFiltros = (p) => (!centro || p.institucion === centro) && (!prevision || p.prevision === prevision);
+
+  const totalMesActual = state.pacientes
+    .filter((p) => p.fecha?.substring(0, 7) === mesActual && coincideFiltros(p))
+    .reduce((s, p) => s + (Number(p.monto) || 0), 0);
+  const totalMesAnterior = state.pacientes
+    .filter((p) => p.fecha?.substring(0, 7) === mesAnterior && coincideFiltros(p))
+    .reduce((s, p) => s + (Number(p.monto) || 0), 0);
+
+  const el = document.getElementById('totalIngresosDelta');
+  if (!el) return;
+
+  if (totalMesAnterior === 0) {
+    el.innerText = totalMesActual > 0 ? '🆕 nuevo este mes' : '';
+    el.className = 'stat-delta';
+    return;
+  }
+
+  const variacion = ((totalMesActual - totalMesAnterior) / totalMesAnterior) * 100;
+  const sube = variacion >= 0;
+  el.innerText = `${sube ? '▲' : '▼'} ${Math.abs(variacion).toFixed(0)}% vs. mes pasado`;
+  el.className = `stat-delta ${sube ? 'stat-delta-sube' : 'stat-delta-baja'}`;
+}
+
 export function cargarDashboard() {
   const inicio = document.getElementById('dashFechaInicio').value;
   const fin = document.getElementById('dashFechaFin').value;
@@ -55,6 +87,8 @@ export function cargarDashboard() {
     const pasaPrevision = !prevision || p.prevision === prevision;
     return pasaFecha && pasaCentro && pasaPrevision;
   });
+
+  actualizarComparativaMensual(centro, prevision);
 
   const total = data.reduce((s, p) => s + (Number(p.monto) || 0), 0);
   const atenciones = data.length;
