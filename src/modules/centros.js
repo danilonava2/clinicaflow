@@ -2,7 +2,7 @@ import { state, guardarDatos } from '../store.js';
 import { escapeHtml, formatearMonto } from '../utils/format.js';
 import { cargarDashboard } from './dashboard.js';
 import { buscarPacientes } from './pacientes.js';
-import { mostrarAviso, mostrarToast, pedirConfirmacion } from '../ui/notificaciones.js';
+import { mostrarAviso, mostrarToast, mostrarToastConDeshacer, pedirConfirmacion } from '../ui/notificaciones.js';
 
 export function renderListaCentros() {
   const container = document.getElementById('listaCentros');
@@ -143,40 +143,60 @@ export async function confirmarEliminarCentro() {
   const centro = state.centros[index];
   const cantidad = state.pacientes.filter((p) => p.institucion === centro.nombre).length;
 
+  const refrescarTodoCentros = () => {
+    renderListaCentros();
+    actualizarSelectCentros();
+    actualizarSelectPrevisionDashboard();
+  };
+
   if (opcion === 'mantener') {
     state.centros.splice(index, 1);
     guardarDatos();
-    renderListaCentros();
-    actualizarSelectCentros();
-    actualizarSelectPrevisionDashboard();
+    refrescarTodoCentros();
     cerrarEliminarCentroModal();
-    mostrarToast(`Centro "${centro.nombre}" eliminado. Los registros conservan el nombre.`, 'exito');
+    mostrarToastConDeshacer(`Centro "${centro.nombre}" eliminado.`, () => {
+      state.centros.splice(index, 0, centro);
+      guardarDatos();
+      refrescarTodoCentros();
+    });
   } else if (opcion === 'eliminar') {
     cerrarEliminarCentroModal();
-    if (!(await pedirConfirmacion(`¿Eliminar ${cantidad} registro(s) junto con el centro? Esta acción no se puede deshacer.`))) return;
+    if (!(await pedirConfirmacion(`¿Eliminar ${cantidad} registro(s) junto con el centro "${centro.nombre}"?`))) return;
+    const eliminados = state.pacientes.filter((p) => p.institucion === centro.nombre);
     state.pacientes = state.pacientes.filter((p) => p.institucion !== centro.nombre);
     state.centros.splice(index, 1);
     guardarDatos();
-    renderListaCentros();
-    actualizarSelectCentros();
-    actualizarSelectPrevisionDashboard();
-    mostrarToast(`Se eliminaron ${cantidad} registro(s) y el centro.`, 'exito');
+    refrescarTodoCentros();
     refrescarVistasDependientes();
+    mostrarToastConDeshacer(`Se eliminaron ${cantidad} registro(s) y el centro.`, () => {
+      state.centros.splice(index, 0, centro);
+      state.pacientes.unshift(...eliminados);
+      guardarDatos();
+      refrescarTodoCentros();
+      refrescarVistasDependientes();
+    });
   } else if (opcion === 'reasignar') {
     const nuevoNombre = document.getElementById('reasignarCentroSelect').value;
     if (!nuevoNombre) {
       mostrarAviso('No hay otro centro disponible para reasignar.', 'advertencia');
       return;
     }
+    const idsReasignados = state.pacientes.filter((p) => p.institucion === centro.nombre).map((p) => p.id);
     state.pacientes = state.pacientes.map((p) => (p.institucion === centro.nombre ? { ...p, institucion: nuevoNombre } : p));
     state.centros.splice(index, 1);
     guardarDatos();
-    renderListaCentros();
-    actualizarSelectCentros();
-    actualizarSelectPrevisionDashboard();
+    refrescarTodoCentros();
     cerrarEliminarCentroModal();
-    mostrarToast(`${cantidad} registro(s) reasignados a "${nuevoNombre}"`, 'exito');
     refrescarVistasDependientes();
+    mostrarToastConDeshacer(`${cantidad} registro(s) reasignados a "${nuevoNombre}"`, () => {
+      state.centros.splice(index, 0, centro);
+      state.pacientes = state.pacientes.map((p) =>
+        idsReasignados.includes(p.id) ? { ...p, institucion: centro.nombre } : p
+      );
+      guardarDatos();
+      refrescarTodoCentros();
+      refrescarVistasDependientes();
+    });
   }
 }
 
@@ -256,11 +276,16 @@ export async function eliminarPrevision(centroIndex, previsionIndex) {
   const centro = state.centros[centroIndex];
   const prevision = centro.previsiones[previsionIndex];
   if (!(await pedirConfirmacion(`¿Eliminar la previsión "${prevision.nombre}"?`))) return;
-  centro.previsiones.splice(previsionIndex, 1);
+  const [eliminada] = centro.previsiones.splice(previsionIndex, 1);
   guardarDatos();
   renderListaCentros();
   actualizarSelectPrevisionDashboard();
-  mostrarToast('Previsión eliminada.', 'exito');
+  mostrarToastConDeshacer('Previsión eliminada.', () => {
+    centro.previsiones.splice(previsionIndex, 0, eliminada);
+    guardarDatos();
+    renderListaCentros();
+    actualizarSelectPrevisionDashboard();
+  });
 }
 
 // ==================== SELECTS COMPARTIDOS ====================

@@ -556,6 +556,52 @@ label {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* SNACKBAR "DESHACER" */
+.undo-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #1e2937;
+  color: white;
+  padding: 14px 18px 14px 20px;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  z-index: 3000;
+  font-size: 14px;
+  animation: undoToastEntrar 0.25s ease;
+}
+.undo-toast.undo-toast-saliendo {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.undo-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: filter 0.12s ease, transform 0.12s ease;
+  white-space: nowrap;
+}
+.undo-btn:hover { filter: brightness(1.1); }
+.undo-btn:active { transform: scale(0.95); }
+@keyframes undoToastEntrar {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@media (max-width: 480px) {
+  .undo-toast { left: 16px; right: 16px; transform: none; bottom: 16px; }
+  .undo-toast.undo-toast-saliendo { transform: translateY(10px); }
+}
+
 /* OPCIONES ELIMINAR CENTRO */
 .opciones-eliminar-centro {
   display: flex;

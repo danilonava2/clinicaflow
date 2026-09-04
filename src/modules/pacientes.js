@@ -3,7 +3,7 @@ import { validarRUT, actualizarIndicadorRUT } from '../utils/rut.js';
 import { formatearFecha, formatearMonto, escapeHtml } from '../utils/format.js';
 import { formatearRutParaMostrar } from '../utils/rut.js';
 import { abrirModalDuplicado, cerrarModalDuplicado, getPendingDuplicateData } from '../ui/modals.js';
-import { mostrarAviso, mostrarToast, pedirConfirmacion } from '../ui/notificaciones.js';
+import { mostrarAviso, mostrarToast, mostrarToastConDeshacer, pedirConfirmacion } from '../ui/notificaciones.js';
 
 const ITEMS_PER_PAGE = 10;
 let currentPage = 1;
@@ -251,9 +251,16 @@ export function guardarEdicion() {
 
 export async function eliminarRegistro(rut, id) {
   if (!(await pedirConfirmacion(`¿Eliminar atención de ${rut}?`))) return;
-  state.pacientes = state.pacientes.filter((p) => p.id !== id);
+  const indice = state.pacientes.findIndex((p) => p.id === id);
+  if (indice === -1) return;
+  const [eliminado] = state.pacientes.splice(indice, 1);
   guardarDatos();
   actualizarContador();
-  mostrarToast('Registro eliminado.', 'exito');
   buscarPacientes(currentPage);
+  mostrarToastConDeshacer('Registro eliminado.', () => {
+    state.pacientes.splice(indice, 0, eliminado);
+    guardarDatos();
+    actualizarContador();
+    buscarPacientes(currentPage);
+  });
 }

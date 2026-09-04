@@ -67,3 +67,28 @@ export function mostrarToast(mensaje, tipo = 'exito') {
     setTimeout(() => overlay.remove(), 300);
   }, 2200);
 }
+
+// Aviso inferior con boton "Deshacer" (estilo Gmail): da unos segundos para
+// arrepentirse de un borrado antes de que quede definitivo.
+export function mostrarToastConDeshacer(mensaje, onDeshacer, duracionMs = 5000) {
+  const toast = document.createElement('div');
+  toast.className = 'undo-toast';
+  toast.innerHTML = `<span>${mensaje}</span><button class="undo-btn">↩️ Deshacer</button>`;
+  document.body.appendChild(toast);
+
+  let deshecho = false;
+  const cerrar = () => {
+    toast.classList.add('undo-toast-saliendo');
+    setTimeout(() => toast.remove(), 300);
+  };
+
+  toast.querySelector('.undo-btn').addEventListener('click', () => {
+    deshecho = true;
+    onDeshacer();
+    cerrar();
+  });
+
+  setTimeout(() => {
+    if (!deshecho) cerrar();
+  }, duracionMs);
+}
