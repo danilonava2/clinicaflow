@@ -3,6 +3,7 @@ import { state, iniciarSincronizacion, detenerSincronizacion, resetState, esPlan
 import * as authService from './firebase/authService.js';
 import { guardarInfoUsuario } from './firebase/firestoreDataService.js';
 import { formatearRutInput, actualizarIndicadorRUT } from './utils/rut.js';
+import { formatearFecha } from './utils/format.js';
 import { calcularRangoRapido } from './utils/fechas.js';
 import { aplicarTemaGuardado, alternarTema } from './utils/tema.js';
 import { iniciarControlInactividad, detenerControlInactividad } from './utils/inactivityTimer.js';
@@ -90,6 +91,43 @@ function actualizarInfoUsuario(email) {
   document.getElementById('userEmailDisplay').innerText = email;
   const mobileUserInfo = document.getElementById('mobileUserInfo');
   if (mobileUserInfo) mobileUserInfo.innerHTML = email;
+}
+
+// Muestra que plan tiene activo el usuario y, si es Pro con fecha, cuando
+// vence (o "Vitalicia" si nunca vence). Si el plan ya vencio, store.js ya
+// lo bajo a "gratis" antes de llegar aqui, asi que esta funcion nunca
+// necesita mostrar un estado "vencido" por su cuenta.
+function actualizarInfoPlan() {
+  const contenedorSidebar = document.getElementById('planStatusDisplay');
+  const contenedorMobile = document.getElementById('planStatusMobile');
+  if (!contenedorSidebar && !contenedorMobile) return;
+
+  let clase;
+  let html;
+  if (esPlanPro()) {
+    clase = 'pro';
+    if (!state.planVenceEl) {
+      html = '⭐ Plan Pro · Vitalicia';
+    } else {
+      const diasRestantes = Math.ceil((new Date(state.planVenceEl) - new Date()) / (1000 * 60 * 60 * 24));
+      const porVencerPronto = diasRestantes <= 7;
+      if (porVencerPronto) clase += ' por-vencer';
+      const avisoDias = porVencerPronto ? ` (¡en ${diasRestantes} día${diasRestantes === 1 ? '' : 's'}!)` : '';
+      html = `⭐ Plan Pro · vence ${formatearFecha(state.planVenceEl)}${avisoDias}`;
+    }
+  } else {
+    clase = 'gratis';
+    html = 'Plan Gratis <a href="planes.html" target="_blank">· Mejorar a Pro</a>';
+  }
+
+  if (contenedorSidebar) {
+    contenedorSidebar.className = `plan-status-linea ${clase}`;
+    contenedorSidebar.innerHTML = html;
+  }
+  if (contenedorMobile) {
+    contenedorMobile.className = `plan-status-mobile ${clase}`;
+    contenedorMobile.innerHTML = html;
+  }
 }
 
 function aplicarRangoBusqueda(tipo) {
@@ -180,6 +218,7 @@ async function onSesionIniciada(user) {
     actualizarSelectFiltrosTurnos();
     migrarCentrosDesdePacientes();
     actualizarContador();
+    actualizarInfoPlan();
 
     if (esPrimeraVez) {
       if (!pantallaInicialMostrada) {
