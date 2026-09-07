@@ -30,6 +30,24 @@ async function adminLogout() {
   await signOut(auth);
 }
 
+function calcularFechaVencimiento(tipo) {
+  const fecha = new Date();
+  if (tipo === 'mensual') fecha.setMonth(fecha.getMonth() + 1);
+  else fecha.setFullYear(fecha.getFullYear() + 1);
+  return fecha.toISOString().slice(0, 10);
+}
+
+function formatearFechaVencimiento(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function fechaVencida(iso) {
+  if (!iso) return false;
+  return new Date(iso) < new Date();
+}
+
 async function cargarUsuarios() {
   const contenedor = document.getElementById('listaUsuarios');
   contenedor.innerHTML = 'Cargando...';
@@ -44,27 +62,61 @@ async function cargarUsuarios() {
       <thead><tr><th>Correo</th><th>Plan</th><th>Registros</th><th>Centros</th><th>Acción</th></tr></thead>
       <tbody>`;
     usuarios.forEach((u) => {
-      const esPro = u.plan === 'pro';
+      const vencido = u.plan === 'pro' && fechaVencida(u.planVenceEl);
+      const esPro = u.plan === 'pro' && !vencido;
+      let etiquetaPlan = 'Gratis';
+      if (esPro) {
+        etiquetaPlan = u.planVenceEl ? `⭐ Pro (vence ${formatearFechaVencimiento(u.planVenceEl)})` : '⭐ Pro (sin vencimiento)';
+      } else if (vencido) {
+        etiquetaPlan = `⚠️ Vencido (${formatearFechaVencimiento(u.planVenceEl)})`;
+      }
       html += `<tr>
         <td>${u.email}</td>
-        <td>${esPro ? '⭐ Pro' : 'Gratis'}</td>
+        <td>${etiquetaPlan}</td>
         <td>${u.totalRegistros}</td>
         <td>${u.totalCentros}</td>
-        <td><button class="${esPro ? 'btn-secondary' : 'btn-primary'} btn-cambiar-plan" data-uid="${u.uid}" data-plan="${esPro ? 'gratis' : 'pro'}">${esPro ? 'Quitar Pro' : 'Activar Pro'}</button></td>
+        <td>
+          ${esPro ? `<button class="btn-secondary btn-quitar-plan" data-uid="${u.uid}">Quitar Pro</button>` : ''}
+          <button class="btn-primary btn-activar-plan" data-uid="${u.uid}" style="margin-left:5px;">${esPro ? 'Renovar' : 'Activar Pro'}</button>
+        </td>
       </tr>`;
     });
     html += '</tbody></table></div>';
     contenedor.innerHTML = html;
 
-    contenedor.querySelectorAll('.btn-cambiar-plan').forEach((btn) => {
+    contenedor.querySelectorAll('.btn-activar-plan').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const tipo = prompt(
+          '¿Qué tipo de Pro le activo?\nEscribe "m" = Mensual, "a" = Anual, "v" = Vitalicia (regalo, sin vencimiento):'
+        );
+        if (tipo === null) return;
+        const opcion = tipo.trim().toLowerCase().charAt(0);
+        if (!['m', 'a', 'v'].includes(opcion)) {
+          alert('No entendí la opción. Escribe "m", "a" o "v".');
+          return;
+        }
+        const planVenceEl = opcion === 'v' ? null : calcularFechaVencimiento(opcion === 'a' ? 'anual' : 'mensual');
+        btn.disabled = true;
+        btn.innerText = 'Guardando...';
+        try {
+          await cambiarPlanUsuario(btn.dataset.uid, 'pro', planVenceEl);
+          await cargarUsuarios();
+        } catch (error) {
+          alert('Error al activar el plan: ' + error.message);
+          btn.disabled = false;
+        }
+      });
+    });
+
+    contenedor.querySelectorAll('.btn-quitar-plan').forEach((btn) => {
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         btn.innerText = 'Guardando...';
         try {
-          await cambiarPlanUsuario(btn.dataset.uid, btn.dataset.plan);
+          await cambiarPlanUsuario(btn.dataset.uid, 'gratis', null);
           await cargarUsuarios();
         } catch (error) {
-          alert('Error al cambiar el plan: ' + error.message);
+          alert('Error al quitar el plan: ' + error.message);
           btn.disabled = false;
         }
       });

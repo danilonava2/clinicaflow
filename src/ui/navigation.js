@@ -21,9 +21,9 @@ export function seleccionarSeccion(section) {
 export function setupNavigation() {
   document.querySelectorAll('.menu-item').forEach((item) => {
     item.addEventListener('click', (e) => {
-      e.preventDefault();
       const section = item.getAttribute('data-section');
-      if (!section) return;
+      if (!section) return; // deja que enlaces normales (ej. "Ver Planes") sigan su curso
+      e.preventDefault();
       seleccionarSeccion(section);
     });
   });

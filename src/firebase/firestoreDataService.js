@@ -45,7 +45,8 @@ export function escucharDatosUsuario(uid, onCambio) {
         pacientes: data.pacientes || [],
         centros: data.centros || [],
         turnos: data.turnos || [],
-        plan: data.plan || 'gratis'
+        plan: data.plan || 'gratis',
+        planVenceEl: data.planVenceEl || null
       });
     },
     (error) => {
@@ -63,12 +64,14 @@ export async function listarTodosLosUsuarios() {
       uid: d.id,
       email: data.email || '(sin correo registrado)',
       plan: data.plan || 'gratis',
+      planVenceEl: data.planVenceEl || null,
       totalRegistros: Array.isArray(data.pacientes) ? data.pacientes.length : 0,
       totalCentros: Array.isArray(data.centros) ? data.centros.length : 0
     };
   });
 }
 
-export async function cambiarPlanUsuario(uid, plan) {
-  await setDoc(doc(firestoreDb, 'usuarios', uid), { plan }, { merge: true });
+// planVenceEl: fecha ISO (YYYY-MM-DD) o null para un plan Pro sin vencimiento.
+export async function cambiarPlanUsuario(uid, plan, planVenceEl = null) {
+  await setDoc(doc(firestoreDb, 'usuarios', uid), { plan, planVenceEl }, { merge: true });
 }

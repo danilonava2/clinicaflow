@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClinicaFlow - Planes y Precios</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .planes-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 20px 60px 20px;
+    }
+    .planes-header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .planes-header img { max-width: 200px; margin-bottom: 16px; }
+    .planes-header h1 { font-size: 26px; color: #1e2937; margin-bottom: 8px; }
+    .planes-header p { color: #64748b; font-size: 15px; }
+
+    .planes-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      background: #f1f5f9;
+      border-radius: 999px;
+      padding: 5px;
+      width: fit-content;
+      margin: 28px auto 36px auto;
+    }
+    .planes-toggle button {
+      border: none;
+      background: transparent;
+      padding: 9px 22px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .planes-toggle button.active {
+      background: #3b82f6;
+      color: white;
+    }
+    .badge-ahorro {
+      background: #dcfce7;
+      color: #16a34a;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-left: 6px;
+    }
+
+    .planes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .plan-card {
+      background: white;
+      border-radius: 20px;
+      padding: 32px 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      border: 2px solid #eef0f3;
+      display: flex;
+      flex-direction: column;
+    }
+    .plan-card.plan-pro {
+      border-color: #3b82f6;
+      background: linear-gradient(180deg, #ffffff, #f0f7ff);
+      position: relative;
+    }
+    .plan-card .plan-nombre { font-size: 18px; font-weight: 700; color: #1e2937; margin-bottom: 6px; }
+    .plan-card .plan-precio { font-size: 36px; font-weight: 800; color: #1e2937; margin-bottom: 2px; }
+    .plan-card .plan-precio span { font-size: 14px; font-weight: 500; color: #64748b; }
+    .plan-card .plan-desc { color: #64748b; font-size: 13px; margin-bottom: 22px; }
+
+    .plan-features { list-style: none; margin-bottom: 26px; flex: 1; }
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
+      color: #334155;
+    }
+    .plan-features li.no-incluido { color: #94a3b8; }
+    .plan-features .icono { flex-shrink: 0; }
+
+    .plan-destacado {
+      position: absolute;
+      top: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #3b82f6;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 999px;
+    }
+
+    .planes-nota {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 32px;
+    }
+    .planes-volver {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .planes-volver a { color: #3b82f6; font-weight: 600; text-decoration: none; font-size: 14px; }
+
+    @media (max-width: 600px) {
+      .planes-header h1 { font-size: 22px; }
+      .plan-card { padding: 26px 20px; }
+    }
+  </style>
+</head>
+<body style="background:#f8fafc;">
+
+<div class="planes-container">
+  <div class="planes-header">
+    <img src="logo-clinicaflow.png" alt="ClinicaFlow">
+    <h1>Elige tu plan</h1>
+    <p>Control de ingresos para profesionales de la salud</p>
+  </div>
+
+  <div class="planes-toggle">
+    <button type="button" class="active" id="btnMensual" onclick="mostrarPeriodo('mensual')">Mensual</button>
+    <button type="button" id="btnAnual" onclick="mostrarPeriodo('anual')">Anual <span class="badge-ahorro">2 meses gratis</span></button>
+  </div>
+
+  <div class="planes-grid">
+    <div class="plan-card">
+      <div class="plan-nombre">🆓 Gratis</div>
+      <div class="plan-precio">$0</div>
+      <div class="plan-desc">Para probar la app y empezar a ordenar tus ingresos.</div>
+      <ul class="plan-features">
+        <li><span class="icono">✅</span> 1 centro de atención</li>
+        <li><span class="icono">✅</span> Hasta 25 registros totales</li>
+        <li><span class="icono">✅</span> Dashboard y búsqueda</li>
+        <li><span class="icono">✅</span> Previsiones por centro</li>
+        <li class="no-incluido"><span class="icono">❌</span> Reportes PDF / Excel</li>
+        <li class="no-incluido"><span class="icono">❌</span> Respaldo autoservicio</li>
+        <li class="no-incluido"><span class="icono">❌</span> Turnos y horas extra</li>
+      </ul>
+      <a href="index.html" class="btn-secondary btn-block" style="text-align:center; text-decoration:none;">Empezar gratis</a>
+    </div>
+
+    <div class="plan-card plan-pro">
+      <div class="plan-destacado">⭐ MÁS ELEGIDO</div>
+      <div class="plan-nombre">💎 Pro</div>
+      <div class="plan-precio" id="proPrecioMensual">$4.990<span>/mes</span></div>
+      <div class="plan-precio" id="proPrecioAnual" style="display:none;">$49.990<span>/año</span></div>
+      <div class="plan-desc">Para quienes atienden en varios centros y quieren todo el control.</div>
+      <ul class="plan-features">
+        <li><span class="icono">✅</span> Centros ilimitados</li>
+        <li><span class="icono">✅</span> Registros ilimitados</li>
+        <li><span class="icono">✅</span> Reportes PDF / Excel</li>
+        <li><span class="icono">✅</span> Calculadora de descuentos</li>
+        <li><span class="icono">✅</span> Respaldo autoservicio</li>
+        <li><span class="icono">✅</span> Turnos y horas extra + calendario</li>
+        <li><span class="icono">✅</span> Sincronización en tiempo real entre dispositivos</li>
+      </ul>
+      <a href="#" id="btnPagoMensual" class="btn-primary btn-block" style="text-align:center; text-decoration:none;">Actualizar a Pro — Mensual</a>
+      <a href="#" id="btnPagoAnual" class="btn-primary btn-block" style="text-align:center; text-decoration:none; display:none;">Actualizar a Pro — Anual</a>
+    </div>
+  </div>
+
+  <p class="planes-nota">
+    Tras confirmar tu pago, tu cuenta se activa en menos de 24 horas.<br>
+    ¿Dudas? Escríbenos a <a href="mailto:danilonava2@gmail.com">danilonava2@gmail.com</a>
+  </p>
+
+  <div class="planes-volver">
+    <a href="index.html">← Volver a ClinicaFlow</a>
+  </div>
+</div>
+
+<script>
+  function mostrarPeriodo(periodo) {
+    const esMensual = periodo === 'mensual';
+    document.getElementById('btnMensual').classList.toggle('active', esMensual);
+    document.getElementById('btnAnual').classList.toggle('active', !esMensual);
+    document.getElementById('proPrecioMensual').style.display = esMensual ? 'block' : 'none';
+    document.getElementById('proPrecioAnual').style.display = esMensual ? 'none' : 'block';
+    document.getElementById('btnPagoMensual').style.display = esMensual ? 'block' : 'none';
+    document.getElementById('btnPagoAnual').style.display = esMensual ? 'none' : 'block';
+  }
+
+  // TODO: reemplazar estos "#" por los links de pago reales una vez creados en Flow
+  // (uno para el cobro recurrente mensual, otro para el anual).
+  document.getElementById('btnPagoMensual').href = '#';
+  document.getElementById('btnPagoAnual').href = '#';
+</script>
+
+</body>
+</html>

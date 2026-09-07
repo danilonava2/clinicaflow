@@ -1,4 +1,4 @@
-import { guardarDatosUsuario as guardarFirestore, escucharDatosUsuario } from './firebase/firestoreDataService.js';
+import { guardarDatosUsuario as guardarFirestore, escucharDatosUsuario, guardarInfoUsuario } from './firebase/firestoreDataService.js';
 import { asegurarMigracion } from './firebase/migration.js';
 import { centrosPorDefecto } from './firebase/realtimeDataService.js';
 
@@ -7,7 +7,8 @@ export const state = {
   pacientes: [],
   centros: [],
   turnos: [],
-  plan: 'gratis'
+  plan: 'gratis',
+  planVenceEl: null
 };
 
 export const LIMITES_PLAN_GRATIS = {
@@ -15,8 +16,12 @@ export const LIMITES_PLAN_GRATIS = {
   registros: 25
 };
 
+// Pro solo cuenta si ademas no vencio. Sin fecha de vencimiento (cuentas
+// activadas antes de esta funcion, o casos especiales) el plan no vence.
 export function esPlanPro() {
-  return state.plan === 'pro';
+  if (state.plan !== 'pro') return false;
+  if (!state.planVenceEl) return true;
+  return new Date(state.planVenceEl) >= new Date();
 }
 
 let detenerEscucha = null;
@@ -43,11 +48,22 @@ export function iniciarSincronizacion(uid, onDatosActualizados) {
     () =>
       new Promise((resolve) => {
         let esPrimeraVez = true;
-        detenerEscucha = escucharDatosUsuario(uid, ({ pacientes, centros, turnos, plan }) => {
+        detenerEscucha = escucharDatosUsuario(uid, ({ pacientes, centros, turnos, plan, planVenceEl }) => {
           state.pacientes = pacientes;
           state.centros = normalizarCentros(centros.length ? centros : centrosPorDefecto());
           state.turnos = turnos || [];
           state.plan = plan || 'gratis';
+          state.planVenceEl = planVenceEl || null;
+
+          // Si el plan Pro vencio, la app misma lo corrige en Firestore para
+          // que quede al dia (sin necesidad de que un admin lo haga a mano).
+          if (state.plan === 'pro' && state.planVenceEl && new Date(state.planVenceEl) < new Date()) {
+            state.plan = 'gratis';
+            guardarInfoUsuario(uid, { plan: 'gratis' }).catch((error) =>
+              console.error('Error al bajar el plan vencido:', error)
+            );
+          }
+
           onDatosActualizados(esPrimeraVez);
           if (esPrimeraVez) {
             esPrimeraVez = false;
@@ -83,4 +99,5 @@ export function resetState() {
   state.centros = normalizarCentros(centrosPorDefecto());
   state.turnos = [];
   state.plan = 'gratis';
+  state.planVenceEl = null;
 }

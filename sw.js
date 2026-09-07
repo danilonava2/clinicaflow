@@ -1,9 +1,10 @@
-const CACHE_NAME = 'clinicaflow-shell-v3';
+const CACHE_NAME = 'clinicaflow-shell-v4';
 
 const APP_SHELL = [
   './',
   './index.html',
   './admin.html',
+  './planes.html',
   './styles.css',
   './favicon.png',
   './logo-clinicaflow.png',
