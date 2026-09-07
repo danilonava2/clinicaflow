@@ -167,8 +167,8 @@
         <li><span class="icono">✅</span> Turnos y horas extra + calendario</li>
         <li><span class="icono">✅</span> Sincronización en tiempo real entre dispositivos</li>
       </ul>
-      <a href="#" id="btnPagoMensual" class="btn-primary btn-block" style="text-align:center; text-decoration:none;">Actualizar a Pro — Mensual</a>
-      <a href="#" id="btnPagoAnual" class="btn-primary btn-block" style="text-align:center; text-decoration:none; display:none;">Actualizar a Pro — Anual</a>
+      <a href="https://www.flow.cl/uri/9hy4gDG19" target="_blank" rel="noopener" id="btnPagoMensual" class="btn-primary btn-block" style="text-align:center; text-decoration:none;">Actualizar a Pro — Mensual</a>
+      <a href="https://www.flow.cl/uri/nn24LKyNx" target="_blank" rel="noopener" id="btnPagoAnual" class="btn-primary btn-block" style="text-align:center; text-decoration:none; display:none;">Actualizar a Pro — Anual</a>
     </div>
   </div>
 
@@ -193,10 +193,10 @@
     document.getElementById('btnPagoAnual').style.display = esMensual ? 'none' : 'block';
   }
 
-  // TODO: reemplazar estos "#" por los links de pago reales una vez creados en Flow
-  // (uno para el cobro recurrente mensual, otro para el anual).
-  document.getElementById('btnPagoMensual').href = '#';
-  document.getElementById('btnPagoAnual').href = '#';
+  // Links de pago reales generados en Flow (Link de pago, no recurrente:
+  // el usuario paga y el desarrollador activa el Pro manualmente en admin.html).
+  document.getElementById('btnPagoMensual').href = 'https://www.flow.cl/uri/9hy4gDG19';
+  document.getElementById('btnPagoAnual').href = 'https://www.flow.cl/uri/nn24LKyNx';
 </script>
 
 </body>
