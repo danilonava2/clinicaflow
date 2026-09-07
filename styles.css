@@ -271,6 +271,13 @@ body {
   margin-bottom: 20px;
 }
 
+/* El PNG del logo tiene un fondo plano gris muy claro (no transparente);
+   multiply lo funde con el fondo blanco de la tarjeta para que no se note
+   como un rectangulo. */
+.welcome-logo img {
+  mix-blend-mode: multiply;
+}
+
 .welcome-card h2 {
   font-size: 28px;
   color: #1e2937;

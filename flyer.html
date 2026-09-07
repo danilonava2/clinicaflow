@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClinicaFlow</title>
+  <meta name="description" content="Lleva el control de tus atenciones y honorarios en un solo lugar. Simple, profesional, en tu celular.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ClinicaFlow - Control de ingresos profesional">
+  <meta property="og:description" content="Lleva el control de tus atenciones y honorarios en un solo lugar. Para médicos y centros.">
+  <meta property="og:image" content="https://danilonava2.github.io/clinicaflow/img/og-flyer.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://danilonava2.github.io/clinicaflow/flyer.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ClinicaFlow - Control de ingresos profesional">
+  <meta name="twitter:description" content="Lleva el control de tus atenciones y honorarios en un solo lugar. Para médicos y centros.">
+  <meta name="twitter:image" content="https://danilonava2.github.io/clinicaflow/img/og-flyer.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    :root {
+      --navy:#0f2040; --gray:#5a6678; --teal:#10b981;
+      --blue:#2563eb; --line:#e2e8f0; --bg:#f4f9ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin:0; min-height:100dvh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background:
+        radial-gradient(circle at 0% 0%, #bae6fd 0%, transparent 42%),
+        radial-gradient(circle at 100% 0%, #a7f3d0 0%, transparent 36%),
+        var(--bg);
+      display:grid; place-items:center; padding:16px; color:var(--navy);
+    }
+    .card {
+      width:min(440px,100%);
+      background:#fff; border:1px solid var(--line);
+      border-radius:28px; padding:26px 18px 22px;
+      box-shadow:0 12px 40px rgba(15,32,64,.08);
+    }
+    header { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:16px; }
+    header img { width:64px; height:64px; object-fit:contain; mix-blend-mode: multiply; }
+    header h1 { margin:0; font-size:1.6rem; letter-spacing:-.03em; }
+    header p { margin:2px 0 0; color:var(--gray); font-size:.82rem; }
+    h2 { margin:0 0 8px; text-align:center; font-size:1.38rem; line-height:1.22; letter-spacing:-.03em; }
+    .sub { text-align:center; color:var(--gray); margin:0 0 16px; font-size:.95rem; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+    .feat {
+      background:#f8fbff; border:1px solid var(--line);
+      border-radius:16px; padding:12px 10px 12px 12px;
+      display:flex; gap:8px; align-items:flex-start;
+    }
+    .feat .ico {
+      width:36px; height:36px; flex:0 0 36px;
+      display:grid; place-items:center;
+    }
+    .feat .ico svg { width:30px; height:30px; }
+    .feat b { display:block; font-size:.86rem; margin-bottom:3px; }
+    .feat span { color:var(--gray); font-size:.74rem; line-height:1.3; }
+    .plans { display:flex; gap:10px; justify-content:center; margin:4px 0 14px; }
+    .pill { flex:1; text-align:center; padding:12px 8px; border-radius:999px; font-weight:700; font-size:.95rem; }
+    .gratis { background:#fff; border:2px solid #cbd5e1; }
+    .pro { background:var(--teal); color:#fff; }
+    a.cta {
+      display:block; text-align:center; background:var(--blue); color:#fff;
+      text-decoration:none; font-weight:800; font-size:1.12rem;
+      padding:16px; border-radius:999px;
+    }
+    footer { text-align:center; color:var(--gray); font-size:.8rem; margin-top:14px; }
+  </style>
+</head>
+<body>
+  <article class="card">
+    <header>
+      <img src="favicon.png" alt="ClinicaFlow">
+      <div>
+        <h1>ClinicaFlow</h1>
+        <p>Control de ingresos profesional</p>
+      </div>
+    </header>
+
+    <h2>Lleva el control de tus atenciones y honorarios en un solo lugar.</h2>
+    <p class="sub">Para médicos y centros.<br>Simple. Profesional. En tu celular.</p>
+
+    <div class="grid">
+      <div class="feat">
+        <div class="ico">
+          <svg viewBox="0 0 32 32" fill="none" stroke="#10b981" stroke-width="2.4" stroke-linecap="round">
+            <rect x="8" y="7" width="16" height="20" rx="3"/>
+            <rect x="12" y="4" width="8" height="5" rx="1.5" fill="#10b981" stroke="none"/>
+            <path d="M12 15h8M12 20h8"/>
+          </svg>
+        </div>
+        <div><b>Registra atenciones</b><span>Paciente, RUT, centro, previsión y monto</span></div>
+      </div>
+      <div class="feat">
+        <div class="ico">
+          <svg viewBox="0 0 32 32" fill="#2563eb">
+            <rect x="6" y="18" width="5" height="9" rx="1"/>
+            <rect x="13.5" y="12" width="5" height="15" rx="1"/>
+            <rect x="21" y="7" width="5" height="20" rx="1"/>
+          </svg>
+        </div>
+        <div><b>Dashboard claro</b><span>Ingresos, promedios y evolución mensual</span></div>
+      </div>
+      <div class="feat">
+        <div class="ico">
+          <svg viewBox="0 0 32 32" fill="none" stroke="#d97706" stroke-width="2.4" stroke-linecap="round">
+            <rect x="8" y="5" width="16" height="22" rx="2"/>
+            <path d="M12 12h8M12 17h8M12 22h6"/>
+          </svg>
+        </div>
+        <div><b>Reportes PDF y Excel</b><span>Por centro, previsión y descuentos</span></div>
+      </div>
+      <div class="feat">
+        <div class="ico">
+          <svg viewBox="0 0 32 32" fill="none" stroke="#7c3aed" stroke-width="2.4">
+            <rect x="6" y="8" width="20" height="18" rx="3"/>
+            <path d="M6 13h20" stroke-width="3"/>
+            <circle cx="21" cy="20" r="4"/>
+            <path d="M21 18v3h2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div><b>Turnos y horas extra</b><span>Calendario y respaldo de datos</span></div>
+      </div>
+    </div>
+
+    <div class="plans">
+      <div class="pill gratis">Plan Gratis</div>
+      <div class="pill pro">Plan Pro</div>
+    </div>
+
+    <a class="cta" href="https://danilonava2.github.io/clinicaflow/">Comenzar ahora</a>
+    <footer>Ideal para policlínico, turnos y consulta particular</footer>
+  </article>
+</body>
+</html>
