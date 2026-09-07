@@ -1,5 +1,5 @@
 import './firebase/config.js';
-import { state, iniciarSincronizacion, detenerSincronizacion, resetState } from './store.js';
+import { state, iniciarSincronizacion, detenerSincronizacion, resetState, esPlanPro } from './store.js';
 import * as authService from './firebase/authService.js';
 import { guardarInfoUsuario } from './firebase/firestoreDataService.js';
 import { formatearRutInput, actualizarIndicadorRUT } from './utils/rut.js';
@@ -49,9 +49,7 @@ import {
   generarReporte,
   descargarReportePDF,
   descargarExcel,
-  abrirDescuentosModal,
-  cerrarDescuentosModal,
-  calcularDescuentos
+  actualizarDescuentoInforme
 } from './modules/reportes.js';
 import { exportarBackup, importarBackup, limpiarTodo } from './modules/backup.js';
 import { cerrarEditModal, cerrarModalDuplicado } from './ui/modals.js';
@@ -74,7 +72,8 @@ import {
   eliminarTurno,
   generarInformeTurnos,
   descargarInformeTurnosPDF,
-  descargarInformeTurnosExcel
+  descargarInformeTurnosExcel,
+  actualizarDescuentoInformeTurnos
 } from './modules/turnos.js';
 
 function mostrarPantallaApp() {
@@ -115,6 +114,25 @@ function aplicarRangoTurnos(tipo) {
   document.getElementById('turnosFechaInicio').value = rango.inicio;
   document.getElementById('turnosFechaFin').value = rango.fin;
   generarInformeTurnos();
+}
+
+function cambiarPestanaReportes(tab) {
+  document.getElementById('tabPoliclinico').classList.toggle('active', tab === 'policlinico');
+  document.getElementById('tabTurnos').classList.toggle('active', tab === 'turnos');
+  document.getElementById('reportePoliclinicoTab').style.display = tab === 'policlinico' ? 'block' : 'none';
+  document.getElementById('reporteTurnosTab').style.display = tab === 'turnos' ? 'block' : 'none';
+
+  if (tab === 'turnos') {
+    const gate = document.getElementById('turnosReporteProGate');
+    const contenido = document.getElementById('turnosReporteContenido');
+    if (esPlanPro()) {
+      gate.style.display = 'none';
+      contenido.style.display = 'block';
+    } else {
+      gate.style.display = 'block';
+      contenido.style.display = 'none';
+    }
+  }
 }
 
 function toggleTema() {
@@ -295,9 +313,8 @@ Object.assign(window, {
   generarReporte,
   descargarReportePDF,
   descargarExcel,
-  abrirDescuentosModal,
-  cerrarDescuentosModal,
-  calcularDescuentos,
+  actualizarDescuentoInforme,
+  cambiarPestanaReportes,
   exportarBackup,
   importarBackup,
   limpiarTodo,
@@ -344,6 +361,7 @@ Object.assign(window, {
   generarInformeTurnos,
   descargarInformeTurnosPDF,
   descargarInformeTurnosExcel,
+  actualizarDescuentoInformeTurnos,
   aplicarRangoTurnos
 });
 

@@ -10,8 +10,10 @@ import { mostrarAviso } from '../ui/notificaciones.js';
 const ITEMS_PER_PAGE = 10;
 
 let currentReportRows = [];
-let currentReportPage = 1;
 let currentReportTotal = 0;
+// Se recuerdan entre "Generar"/paginacion para no perder lo escrito.
+let descuentoPct1Guardado = '';
+let descuentoPct2Guardado = '';
 
 function obtenerFiltros() {
   const inicio = document.getElementById('fechaInicio').value;
@@ -68,7 +70,6 @@ export function generarReporte(page = 1) {
   const filtros = obtenerFiltros();
   const rows = filtrarPacientes(filtros);
   currentReportRows = rows;
-  currentReportPage = page;
 
   const container = document.getElementById('reporteContainer');
   const paginacion = document.getElementById('reportePaginacion');
@@ -90,7 +91,7 @@ export function generarReporte(page = 1) {
 
   let html = `<div class="reporte-resultado">
     <div class="reporte-encabezado">
-      <h3>📄 Reporte de Atenciones</h3>
+      <h3>📄 Reporte de Atenciones (Policlínico)</h3>
       <span class="reporte-badge">${rows.length} atención${rows.length === 1 ? '' : 'es'} encontrada${rows.length === 1 ? '' : 's'}</span>
     </div>
     <div class="reporte-desglose-grid">
@@ -119,16 +120,30 @@ export function generarReporte(page = 1) {
       </table>
     </div>
     <div class="reporte-total">
-      <span>💰 Total Ingresos</span>
-      <span class="monto">${formatearMonto(totalBruto)}</span>
+      <div class="reporte-total-linea">
+        <span>💰 Total Ingresos</span>
+        <span class="monto">${formatearMonto(totalBruto)}</span>
+      </div>
+      <div class="reporte-descuento-inputs">
+        <div>
+          <label>Descuento 1 (%)</label>
+          <input type="number" id="reporteDescuentoPct1" min="0" max="100" step="0.01" placeholder="0" value="${descuentoPct1Guardado}" oninput="actualizarDescuentoInforme()">
+        </div>
+        <div>
+          <label>Descuento 2 (%)</label>
+          <input type="number" id="reporteDescuentoPct2" min="0" max="100" step="0.01" placeholder="0" value="${descuentoPct2Guardado}" oninput="actualizarDescuentoInforme()">
+        </div>
+      </div>
+      <div id="reporteDescuentoResultado"></div>
     </div>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
       <button onclick="descargarReportePDF()" class="btn-primary">📄 Descargar PDF</button>
-      <button onclick="abrirDescuentosModal()" class="btn-secondary">🧮 Calcular Descuentos</button>
+      <button onclick="descargarExcel()" class="btn-secondary">📥 Excel</button>
     </div>
   </div>`;
 
   container.innerHTML = html;
+  actualizarDescuentoInforme();
 
   if (paginacion) {
     let pagHtml = '';
@@ -265,8 +280,8 @@ export function descargarReportePDF() {
   doc.setTextColor(59, 130, 246);
   doc.text(`TOTAL GENERAL: $${total.toLocaleString('es-CL')}`, 14, y);
 
-  const pct1 = parseFloat(document.getElementById('descuentoPct1')?.value) || 0;
-  const pct2 = parseFloat(document.getElementById('descuentoPct2')?.value) || 0;
+  const pct1 = parseFloat(document.getElementById('reporteDescuentoPct1')?.value) || 0;
+  const pct2 = parseFloat(document.getElementById('reporteDescuentoPct2')?.value) || 0;
 
   if (pct1 > 0 || pct2 > 0) {
     const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(total, pct1, pct2);
@@ -346,7 +361,7 @@ export function descargarExcel() {
   descargarArchivo(excelBuffer, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 }
 
-// ==================== CALCULADORA DE DESCUENTOS ====================
+// ==================== DESCUENTOS (inline en la franja del total) ====================
 function calcularMontosDescuento(total, pct1, pct2) {
   const monto1 = total * (pct1 / 100);
   const subtotal1 = total - monto1;
@@ -355,27 +370,40 @@ function calcularMontosDescuento(total, pct1, pct2) {
   return { monto1, subtotal1, monto2, totalFinal };
 }
 
-export function abrirDescuentosModal() {
-  document.getElementById('descuentoPct1').value = '';
-  document.getElementById('descuentoPct2').value = '';
-  calcularDescuentos();
-  document.getElementById('descuentosModal').style.display = 'flex';
-}
+export function actualizarDescuentoInforme() {
+  const pct1Input = document.getElementById('reporteDescuentoPct1');
+  const pct2Input = document.getElementById('reporteDescuentoPct2');
+  const resultado = document.getElementById('reporteDescuentoResultado');
+  if (!pct1Input || !pct2Input || !resultado) return;
 
-export function cerrarDescuentosModal() {
-  document.getElementById('descuentosModal').style.display = 'none';
-}
+  descuentoPct1Guardado = pct1Input.value;
+  descuentoPct2Guardado = pct2Input.value;
 
-export function calcularDescuentos() {
-  const pct1 = parseFloat(document.getElementById('descuentoPct1').value) || 0;
-  const pct2 = parseFloat(document.getElementById('descuentoPct2').value) || 0;
+  const pct1 = parseFloat(pct1Input.value) || 0;
+  const pct2 = parseFloat(pct2Input.value) || 0;
 
-  const total = currentReportTotal;
-  const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(total, pct1, pct2);
+  if (pct1 <= 0 && pct2 <= 0) {
+    resultado.innerHTML = '';
+    return;
+  }
 
-  document.getElementById('descuentoTotalInicial').innerText = formatearMonto(total);
-  document.getElementById('descuentoMonto1').innerText = formatearMonto(monto1);
-  document.getElementById('descuentoSubtotal1').innerText = formatearMonto(subtotal1);
-  document.getElementById('descuentoMonto2').innerText = formatearMonto(monto2);
-  document.getElementById('descuentoTotalFinal').innerText = formatearMonto(totalFinal);
+  const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(currentReportTotal, pct1, pct2);
+  resultado.innerHTML = `
+    <div class="descuento-linea">
+      <span>Descuento 1 (${pct1}%)</span>
+      <span>-${formatearMonto(monto1)}</span>
+    </div>
+    <div class="descuento-linea descuento-subtotal">
+      <span>Subtotal</span>
+      <span>${formatearMonto(subtotal1)}</span>
+    </div>
+    <div class="descuento-linea">
+      <span>Descuento 2 (${pct2}%)</span>
+      <span>-${formatearMonto(monto2)}</span>
+    </div>
+    <div class="descuento-final">
+      <span>Total Final (neto)</span>
+      <span>${formatearMonto(totalFinal)}</span>
+    </div>
+  `;
 }

@@ -17,6 +17,9 @@ let mesActual = new Date().getMonth();
 let anioActual = new Date().getFullYear();
 let diaSeleccionado = null;
 let currentInformeRows = [];
+let currentInformeTotal = 0;
+let descuentoTurnoPct1Guardado = '';
+let descuentoTurnoPct2Guardado = '';
 
 function pad2(n) {
   return n.toString().padStart(2, '0');
@@ -389,6 +392,7 @@ export function generarInformeTurnos(page = 1) {
 
   const totalHoras = rows.reduce((s, t) => s + (Number(t.horas) || 0), 0);
   const totalMonto = rows.reduce((s, t) => s + (Number(t.total) || 0), 0);
+  currentInformeTotal = totalMonto;
   const totalPages = Math.ceil(rows.length / ITEMS_PER_PAGE);
   const startIdx = (page - 1) * ITEMS_PER_PAGE;
   const paginated = rows.slice(startIdx, startIdx + ITEMS_PER_PAGE);
@@ -420,8 +424,21 @@ export function generarInformeTurnos(page = 1) {
       </table>
     </div>
     <div class="reporte-total">
-      <span>🕐 Total horas: ${totalHoras} — 💰 Total</span>
-      <span class="monto">${formatearMonto(totalMonto)}</span>
+      <div class="reporte-total-linea">
+        <span>🕐 Total horas: ${totalHoras} — 💰 Total</span>
+        <span class="monto">${formatearMonto(totalMonto)}</span>
+      </div>
+      <div class="reporte-descuento-inputs">
+        <div>
+          <label>Descuento 1 (%)</label>
+          <input type="number" id="turnoDescuentoPct1" min="0" max="100" step="0.01" placeholder="0" value="${descuentoTurnoPct1Guardado}" oninput="actualizarDescuentoInformeTurnos()">
+        </div>
+        <div>
+          <label>Descuento 2 (%)</label>
+          <input type="number" id="turnoDescuentoPct2" min="0" max="100" step="0.01" placeholder="0" value="${descuentoTurnoPct2Guardado}" oninput="actualizarDescuentoInformeTurnos()">
+        </div>
+      </div>
+      <div id="turnoDescuentoResultado"></div>
     </div>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
       <button onclick="descargarInformeTurnosPDF()" class="btn-primary">📄 Descargar PDF</button>
@@ -430,6 +447,7 @@ export function generarInformeTurnos(page = 1) {
   </div>`;
 
   container.innerHTML = html;
+  actualizarDescuentoInformeTurnos();
 
   if (paginacion) {
     let pagHtml = '';
@@ -531,6 +549,51 @@ export function descargarInformeTurnosPDF() {
   doc.setTextColor(59, 130, 246);
   doc.text(`TOTAL HORAS: ${totalHoras}   |   TOTAL: $${totalMonto.toLocaleString('es-CL')}`, 14, y);
 
+  const pct1 = parseFloat(document.getElementById('turnoDescuentoPct1')?.value) || 0;
+  const pct2 = parseFloat(document.getElementById('turnoDescuentoPct2')?.value) || 0;
+
+  if (pct1 > 0 || pct2 > 0) {
+    const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(totalMonto, pct1, pct2);
+
+    y += 14;
+    if (y > 250) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(30, 41, 59);
+    doc.text('Detalle de Descuentos', 14, y);
+    y += 8;
+
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(0, 0, 0);
+
+    const lineaDescuento = (label, valor) => {
+      doc.text(label, 14, y);
+      doc.text(valor, 150, y);
+      y += 6;
+    };
+
+    lineaDescuento('Total Turnos', `$${totalMonto.toLocaleString('es-CL')}`);
+    lineaDescuento(`Descuento 1 (${pct1}%)`, `-$${monto1.toLocaleString('es-CL')}`);
+    lineaDescuento('Subtotal', `$${subtotal1.toLocaleString('es-CL')}`);
+    lineaDescuento(`Descuento 2 (${pct2}%)`, `-$${monto2.toLocaleString('es-CL')}`);
+
+    y += 2;
+    doc.setLineWidth(0.3);
+    doc.line(14, y, 196, y);
+    y += 7;
+
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(22, 163, 74);
+    doc.text('TOTAL FINAL (neto):', 14, y);
+    doc.text(`$${totalFinal.toLocaleString('es-CL')}`, 150, y);
+  }
+
   doc.setFontSize(7);
   doc.setTextColor(148, 163, 184);
   doc.text('ClinicaFlow - Control de Ingresos para Profesionales de la Salud', 14, 285);
@@ -561,4 +624,51 @@ export function descargarInformeTurnosExcel() {
   const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
   const filename = `Turnos_${new Date().toISOString().slice(0, 10)}.xlsx`;
   descargarArchivo(excelBuffer, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+
+// ==================== DESCUENTOS (inline en la franja del total) ====================
+function calcularMontosDescuento(total, pct1, pct2) {
+  const monto1 = total * (pct1 / 100);
+  const subtotal1 = total - monto1;
+  const monto2 = subtotal1 * (pct2 / 100);
+  const totalFinal = subtotal1 - monto2;
+  return { monto1, subtotal1, monto2, totalFinal };
+}
+
+export function actualizarDescuentoInformeTurnos() {
+  const pct1Input = document.getElementById('turnoDescuentoPct1');
+  const pct2Input = document.getElementById('turnoDescuentoPct2');
+  const resultado = document.getElementById('turnoDescuentoResultado');
+  if (!pct1Input || !pct2Input || !resultado) return;
+
+  descuentoTurnoPct1Guardado = pct1Input.value;
+  descuentoTurnoPct2Guardado = pct2Input.value;
+
+  const pct1 = parseFloat(pct1Input.value) || 0;
+  const pct2 = parseFloat(pct2Input.value) || 0;
+
+  if (pct1 <= 0 && pct2 <= 0) {
+    resultado.innerHTML = '';
+    return;
+  }
+
+  const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(currentInformeTotal, pct1, pct2);
+  resultado.innerHTML = `
+    <div class="descuento-linea">
+      <span>Descuento 1 (${pct1}%)</span>
+      <span>-${formatearMonto(monto1)}</span>
+    </div>
+    <div class="descuento-linea descuento-subtotal">
+      <span>Subtotal</span>
+      <span>${formatearMonto(subtotal1)}</span>
+    </div>
+    <div class="descuento-linea">
+      <span>Descuento 2 (${pct2}%)</span>
+      <span>-${formatearMonto(monto2)}</span>
+    </div>
+    <div class="descuento-final">
+      <span>Total Final (neto)</span>
+      <span>${formatearMonto(totalFinal)}</span>
+    </div>
+  `;
 }
