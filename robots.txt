@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://danilonava2.github.io/clinicaflow/sitemap.xml
