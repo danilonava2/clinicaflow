@@ -97,6 +97,7 @@
         <button data-section="dashboard" class="mobile-menu-btn">📊 Dashboard</button>
         <button data-section="pagos" class="mobile-menu-btn">💰 Reportes</button>
         <button data-section="centros" class="mobile-menu-btn">🏥 Centros</button>
+        <button data-section="turnos" class="mobile-menu-btn">🕐 Turnos</button>
       </div>
       <button class="mobile-config-icon" onclick="toggleConfigMenu()">⚙️</button>
     </div>
@@ -127,7 +128,8 @@
       <a href="#" class="menu-item" data-section="dashboard"><span>📊 Dashboard</span></a>
       <a href="#" class="menu-item" data-section="pagos"><span>💰 Reportes</span></a>
       <a href="#" class="menu-item" data-section="centros"><span>🏥 Centros</span></a>
-      
+      <a href="#" class="menu-item" data-section="turnos"><span>🕐 Turnos ⭐</span></a>
+
       <div style="margin: 20px 0; padding: 12px; background:#1e40af; border-radius:8px; color:white; font-size:14px; text-align:center;">
         <span id="contador-registros">0 registros</span>
       </div>
@@ -332,6 +334,44 @@
         <div id="listaCentros"></div>
       </div>
     </div>
+
+    <!-- TURNOS Y HORAS EXTRA (PRO) -->
+    <div id="section-turnos" class="section">
+      <h2>🕐 Turnos y Horas Extra</h2>
+
+      <div class="card" id="turnosProGate" style="display:none;">
+        <div class="reporte-vacio">🔒 Esta sección es exclusiva del plan Pro. Actualiza tu plan para registrar turnos y horas extra.</div>
+      </div>
+
+      <div id="turnosContenido" style="display:none;">
+        <div class="card">
+          <div class="calendario-header">
+            <button onclick="cambiarMesTurnos(-1)" class="btn-secondary">⬅</button>
+            <h3 id="turnosMesLabel"></h3>
+            <button onclick="cambiarMesTurnos(1)" class="btn-secondary">➡</button>
+          </div>
+          <div class="calendario-grid" id="calendarioGrid"></div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-bottom:15px;">📊 Informe de Turnos</h3>
+          <div class="filtros-rapidos">
+            <button type="button" onclick="aplicarRangoTurnos('hoy')" class="btn-chip">Hoy</button>
+            <button type="button" onclick="aplicarRangoTurnos('semana')" class="btn-chip">Esta semana</button>
+            <button type="button" onclick="aplicarRangoTurnos('mes')" class="btn-chip">Este mes</button>
+          </div>
+          <div class="advanced-filters">
+            <div><label>📅 Desde</label><input type="date" id="turnosFechaInicio"></div>
+            <div><label>📅 Hasta</label><input type="date" id="turnosFechaFin"></div>
+            <div><label>🏥 Centro</label><select id="turnosFiltroCentro"><option value="">Todos los centros</option></select></div>
+            <div><label>🕐 Tipo</label><select id="turnosFiltroTipo"><option value="">Todos los tipos</option></select></div>
+            <button onclick="generarInformeTurnos()" class="btn-primary">📄 Generar</button>
+          </div>
+          <div id="informeTurnosContainer"></div>
+          <div id="informeTurnosPaginacion" class="pagination-container"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -449,6 +489,62 @@
     <div class="modal-actions">
       <button onclick="confirmarEliminarCentro()" class="btn-primary">Confirmar</button>
       <button onclick="cerrarEliminarCentroModal()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+<div id="editarTipoTurnoModal" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Editar Tipo de Turno</h3>
+    <input type="hidden" id="editarTipoTurnoCentroIndex">
+    <input type="hidden" id="editarTipoTurnoIndex">
+    <label>Nombre</label>
+    <input type="text" id="editarTipoTurnoNombreInput">
+    <label>Valor por hora</label>
+    <input type="number" id="editarTipoTurnoValorHoraInput">
+    <div class="modal-actions">
+      <button onclick="confirmarEditarTipoTurno()" class="btn-primary">Guardar</button>
+      <button onclick="cerrarEditarTipoTurnoModal()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+<div id="diaTurnoModal" class="modal">
+  <div class="modal-content">
+    <h3>📅 <span id="diaTurnoFechaLabel"></span></h3>
+    <div id="diaTurnoLista"></div>
+    <p style="font-size:12px; font-weight:600; color:#94a3b8; margin:0 0 8px 0;">➕ AGREGAR TURNO</p>
+    <label>Centro</label>
+    <select id="turnoCentroSelect" onchange="actualizarTiposTurnoDisponibles()"></select>
+    <label>Tipo de turno</label>
+    <select id="turnoTipoSelect" onchange="autocompletarValorHora()" disabled></select>
+    <label>Valor por hora</label>
+    <input type="number" id="turnoValorHoraInput" oninput="calcularTotalTurno()">
+    <label>Horas</label>
+    <input type="number" id="turnoHorasInput" step="0.5" oninput="calcularTotalTurno()">
+    <label>Total</label>
+    <input type="number" id="turnoTotalInput">
+    <div class="modal-actions">
+      <button onclick="agregarTurno()" class="btn-primary">+ Agregar Turno</button>
+      <button onclick="cerrarDiaTurnoModal()" class="btn-secondary">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div id="editarTurnoModal" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Editar Turno</h3>
+    <input type="hidden" id="editarTurnoId">
+    <label>Centro</label>
+    <select id="editarTurnoCentroSelect" onchange="actualizarTiposTurnoEdicion()"></select>
+    <label>Tipo de turno</label>
+    <select id="editarTurnoTipoSelect" onchange="autocompletarValorHoraEdicion()"></select>
+    <label>Valor por hora</label>
+    <input type="number" id="editarTurnoValorHoraInput" oninput="calcularTotalTurnoEdicion()">
+    <label>Horas</label>
+    <input type="number" id="editarTurnoHorasInput" step="0.5" oninput="calcularTotalTurnoEdicion()">
+    <label>Total</label>
+    <input type="number" id="editarTurnoTotalInput">
+    <div class="modal-actions">
+      <button onclick="confirmarEditarTurno()" class="btn-primary">Guardar</button>
+      <button onclick="cerrarEditarTurnoModal()" class="btn-secondary">Cancelar</button>
     </div>
   </div>
 </div>

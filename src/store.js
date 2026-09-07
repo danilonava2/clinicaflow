@@ -6,6 +6,7 @@ export const state = {
   currentUser: null,
   pacientes: [],
   centros: [],
+  turnos: [],
   plan: 'gratis'
 };
 
@@ -21,12 +22,13 @@ export function esPlanPro() {
 let detenerEscucha = null;
 
 // Centros venian antes como simples strings (["Clínica A", ...]). Ahora cada
-// centro es un objeto con sus previsiones ({ nombre, previsiones: [...] }).
-// Esto convierte datos viejos al formato nuevo sin perder informacion.
+// centro es un objeto con sus previsiones y tipos de turno
+// ({ nombre, previsiones: [...], tiposTurno: [...] }). Esto convierte datos
+// viejos al formato nuevo sin perder informacion.
 function normalizarCentros(centros) {
   return (centros || []).map((c) => {
-    if (typeof c === 'string') return { nombre: c, previsiones: [] };
-    return { nombre: c.nombre, previsiones: c.previsiones || [] };
+    if (typeof c === 'string') return { nombre: c, previsiones: [], tiposTurno: [] };
+    return { nombre: c.nombre, previsiones: c.previsiones || [], tiposTurno: c.tiposTurno || [] };
   });
 }
 
@@ -41,9 +43,10 @@ export function iniciarSincronizacion(uid, onDatosActualizados) {
     () =>
       new Promise((resolve) => {
         let esPrimeraVez = true;
-        detenerEscucha = escucharDatosUsuario(uid, ({ pacientes, centros, plan }) => {
+        detenerEscucha = escucharDatosUsuario(uid, ({ pacientes, centros, turnos, plan }) => {
           state.pacientes = pacientes;
           state.centros = normalizarCentros(centros.length ? centros : centrosPorDefecto());
+          state.turnos = turnos || [];
           state.plan = plan || 'gratis';
           onDatosActualizados(esPrimeraVez);
           if (esPrimeraVez) {
@@ -67,7 +70,8 @@ export async function guardarDatos() {
   try {
     await guardarFirestore(state.currentUser.uid, {
       pacientes: state.pacientes,
-      centros: state.centros
+      centros: state.centros,
+      turnos: state.turnos
     });
   } catch (error) {
     console.error('Error al guardar en Firestore:', error);
@@ -77,5 +81,6 @@ export async function guardarDatos() {
 export function resetState() {
   state.pacientes = [];
   state.centros = normalizarCentros(centrosPorDefecto());
+  state.turnos = [];
   state.plan = 'gratis';
 }

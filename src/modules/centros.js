@@ -54,6 +54,29 @@ export function renderListaCentros() {
         <button onclick="agregarPrevision(${index})" class="btn-secondary">+ Agregar previsión</button>
       </div>
     </div>
+    <div class="previsiones-list">
+      <p style="font-size:12px; font-weight:600; color:#94a3b8; margin:0 0 4px 0;">🕐 TIPOS DE TURNO (Pro)</p>`;
+
+    if (centro.tiposTurno.length === 0) {
+      html += '<p style="color:#94a3b8; font-size:13px; margin:0;">Sin tipos de turno configurados todavía.</p>';
+    } else {
+      centro.tiposTurno.forEach((tipo, tipoIndex) => {
+        html += `<div class="prevision-item">
+          <span>🕐 ${escapeHtml(tipo.nombre)} — ${formatearMonto(tipo.valorHora)}/hora</span>
+          <div>
+            <button onclick="editarTipoTurno(${index},${tipoIndex})" class="btn-edit" style="margin-right:5px;">✏️</button>
+            <button onclick="eliminarTipoTurno(${index},${tipoIndex})" class="btn-delete">🗑️</button>
+          </div>
+        </div>`;
+      });
+    }
+
+    html += `<div class="prevision-add-form">
+        <input type="text" id="nuevoTipoTurnoNombre-${index}" placeholder="Nombre (ej: Turno Extra)">
+        <input type="number" id="nuevoTipoTurnoValorHora-${index}" placeholder="Valor por hora">
+        <button onclick="agregarTipoTurno(${index})" class="btn-secondary">+ Agregar tipo de turno</button>
+      </div>
+    </div>
     </div>`;
   });
   html += '</div>';
@@ -101,6 +124,7 @@ export function confirmarRenombrarCentro() {
     }
     return p;
   });
+  state.turnos = state.turnos.map((t) => (t.centro === nombreAnterior ? { ...t, centro: nuevoNombre } : t));
 
   guardarDatos();
   renderListaCentros();
@@ -163,7 +187,9 @@ export async function confirmarEliminarCentro() {
     cerrarEliminarCentroModal();
     if (!(await pedirConfirmacion(`¿Eliminar ${cantidad} registro(s) junto con el centro "${centro.nombre}"?`))) return;
     const eliminados = state.pacientes.filter((p) => p.institucion === centro.nombre);
+    const turnosEliminados = state.turnos.filter((t) => t.centro === centro.nombre);
     state.pacientes = state.pacientes.filter((p) => p.institucion !== centro.nombre);
+    state.turnos = state.turnos.filter((t) => t.centro !== centro.nombre);
     state.centros.splice(index, 1);
     guardarDatos();
     refrescarTodoCentros();
@@ -171,6 +197,7 @@ export async function confirmarEliminarCentro() {
     mostrarToastConDeshacer(`Se eliminaron ${cantidad} registro(s) y el centro.`, () => {
       state.centros.splice(index, 0, centro);
       state.pacientes.unshift(...eliminados);
+      state.turnos.unshift(...turnosEliminados);
       guardarDatos();
       refrescarTodoCentros();
       refrescarVistasDependientes();
@@ -182,7 +209,9 @@ export async function confirmarEliminarCentro() {
       return;
     }
     const idsReasignados = state.pacientes.filter((p) => p.institucion === centro.nombre).map((p) => p.id);
+    const idsTurnosReasignados = state.turnos.filter((t) => t.centro === centro.nombre).map((t) => t.id);
     state.pacientes = state.pacientes.map((p) => (p.institucion === centro.nombre ? { ...p, institucion: nuevoNombre } : p));
+    state.turnos = state.turnos.map((t) => (t.centro === centro.nombre ? { ...t, centro: nuevoNombre } : t));
     state.centros.splice(index, 1);
     guardarDatos();
     refrescarTodoCentros();
@@ -193,6 +222,7 @@ export async function confirmarEliminarCentro() {
       state.pacientes = state.pacientes.map((p) =>
         idsReasignados.includes(p.id) ? { ...p, institucion: centro.nombre } : p
       );
+      state.turnos = state.turnos.map((t) => (idsTurnosReasignados.includes(t.id) ? { ...t, centro: centro.nombre } : t));
       guardarDatos();
       refrescarTodoCentros();
       refrescarVistasDependientes();
@@ -219,7 +249,7 @@ export function agregarCentro() {
     mostrarAviso('Ya existe un centro con ese nombre', 'advertencia');
     return;
   }
-  state.centros.push({ nombre, previsiones: [] });
+  state.centros.push({ nombre, previsiones: [], tiposTurno: [] });
   guardarDatos();
   renderListaCentros();
   actualizarSelectCentros();
@@ -292,6 +322,82 @@ export async function eliminarPrevision(centroIndex, previsionIndex) {
     guardarDatos();
     renderListaCentros();
     actualizarSelectPrevisionDashboard();
+  });
+}
+
+// ==================== TIPOS DE TURNO ====================
+export function agregarTipoTurno(centroIndex) {
+  const nombreInput = document.getElementById(`nuevoTipoTurnoNombre-${centroIndex}`);
+  const valorInput = document.getElementById(`nuevoTipoTurnoValorHora-${centroIndex}`);
+  const nombre = nombreInput.value.trim();
+  const valorHora = parseInt(valorInput.value) || 0;
+  if (!nombre) {
+    mostrarAviso('Ingresa un nombre para el tipo de turno', 'advertencia');
+    return;
+  }
+  const centro = state.centros[centroIndex];
+  if (centro.tiposTurno.some((t) => t.nombre === nombre)) {
+    mostrarAviso('Ya existe un tipo de turno con ese nombre en este centro', 'advertencia');
+    return;
+  }
+  centro.tiposTurno.push({ nombre, valorHora });
+  guardarDatos();
+  renderListaCentros();
+  mostrarToast(`Tipo de turno "${nombre}" agregado`, 'exito');
+}
+
+export function editarTipoTurno(centroIndex, tipoIndex) {
+  const tipo = state.centros[centroIndex].tiposTurno[tipoIndex];
+  document.getElementById('editarTipoTurnoCentroIndex').value = centroIndex;
+  document.getElementById('editarTipoTurnoIndex').value = tipoIndex;
+  document.getElementById('editarTipoTurnoNombreInput').value = tipo.nombre;
+  document.getElementById('editarTipoTurnoValorHoraInput').value = tipo.valorHora;
+  document.getElementById('editarTipoTurnoModal').style.display = 'flex';
+}
+
+export function cerrarEditarTipoTurnoModal() {
+  document.getElementById('editarTipoTurnoModal').style.display = 'none';
+}
+
+export function confirmarEditarTipoTurno() {
+  const centroIndex = parseInt(document.getElementById('editarTipoTurnoCentroIndex').value);
+  const tipoIndex = parseInt(document.getElementById('editarTipoTurnoIndex').value);
+  const centro = state.centros[centroIndex];
+  const tipo = centro.tiposTurno[tipoIndex];
+
+  const nuevoNombre = document.getElementById('editarTipoTurnoNombreInput').value.trim();
+  const nuevoValorHora = parseInt(document.getElementById('editarTipoTurnoValorHoraInput').value) || 0;
+  const nombreAnterior = tipo.nombre;
+
+  tipo.nombre = nuevoNombre || tipo.nombre;
+  tipo.valorHora = nuevoValorHora;
+
+  // Los turnos ya registrados con este tipo tambien deben reflejar el
+  // cambio de nombre (el valor por hora ya cobrado no se toca, solo el
+  // nombre para que el selector siga encontrando coincidencia al editar).
+  if (tipo.nombre !== nombreAnterior) {
+    state.turnos = state.turnos.map((t) =>
+      t.centro === centro.nombre && t.tipo === nombreAnterior ? { ...t, tipo: tipo.nombre } : t
+    );
+  }
+
+  guardarDatos();
+  renderListaCentros();
+  cerrarEditarTipoTurnoModal();
+  mostrarToast('Tipo de turno actualizado.', 'exito');
+}
+
+export async function eliminarTipoTurno(centroIndex, tipoIndex) {
+  const centro = state.centros[centroIndex];
+  const tipo = centro.tiposTurno[tipoIndex];
+  if (!(await pedirConfirmacion(`¿Eliminar el tipo de turno "${tipo.nombre}"?`))) return;
+  const [eliminado] = centro.tiposTurno.splice(tipoIndex, 1);
+  guardarDatos();
+  renderListaCentros();
+  mostrarToastConDeshacer('Tipo de turno eliminado.', () => {
+    centro.tiposTurno.splice(tipoIndex, 0, eliminado);
+    guardarDatos();
+    renderListaCentros();
   });
 }
 
@@ -381,7 +487,7 @@ export function migrarCentrosDesdePacientes() {
   const nombresActuales = new Set(state.centros.map((c) => c.nombre));
   const nuevos = Array.from(existentes).filter((nombre) => !nombresActuales.has(nombre));
   if (nuevos.length) {
-    nuevos.forEach((nombre) => state.centros.push({ nombre, previsiones: [] }));
+    nuevos.forEach((nombre) => state.centros.push({ nombre, previsiones: [], tiposTurno: [] }));
     guardarDatos();
   }
 }

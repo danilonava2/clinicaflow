@@ -25,7 +25,12 @@ import {
   editarPrevision,
   eliminarPrevision,
   cerrarEditarPrevisionModal,
-  confirmarEditarPrevision
+  confirmarEditarPrevision,
+  agregarTipoTurno,
+  editarTipoTurno,
+  cerrarEditarTipoTurnoModal,
+  confirmarEditarTipoTurno,
+  eliminarTipoTurno
 } from './modules/centros.js';
 import {
   actualizarContador,
@@ -50,6 +55,27 @@ import {
 } from './modules/reportes.js';
 import { exportarBackup, importarBackup, limpiarTodo } from './modules/backup.js';
 import { cerrarEditModal, cerrarModalDuplicado } from './ui/modals.js';
+import {
+  iniciarSeccionTurnos,
+  actualizarSelectFiltrosTurnos,
+  cambiarMesTurnos,
+  abrirDiaTurnoModal,
+  cerrarDiaTurnoModal,
+  actualizarTiposTurnoDisponibles,
+  autocompletarValorHora,
+  calcularTotalTurno,
+  agregarTurno,
+  editarTurno,
+  actualizarTiposTurnoEdicion,
+  autocompletarValorHoraEdicion,
+  calcularTotalTurnoEdicion,
+  cerrarEditarTurnoModal,
+  confirmarEditarTurno,
+  eliminarTurno,
+  generarInformeTurnos,
+  descargarInformeTurnosPDF,
+  descargarInformeTurnosExcel
+} from './modules/turnos.js';
 
 function mostrarPantallaApp() {
   document.getElementById('loginScreen').style.display = 'none';
@@ -81,6 +107,14 @@ function aplicarRangoDashboard(tipo) {
   document.getElementById('dashFechaInicio').value = rango.inicio;
   document.getElementById('dashFechaFin').value = rango.fin;
   cargarDashboard();
+}
+
+function aplicarRangoTurnos(tipo) {
+  const rango = calcularRangoRapido(tipo);
+  if (!rango) return;
+  document.getElementById('turnosFechaInicio').value = rango.inicio;
+  document.getElementById('turnosFechaFin').value = rango.fin;
+  generarInformeTurnos();
 }
 
 function toggleTema() {
@@ -125,6 +159,7 @@ async function onSesionIniciada(user) {
     renderListaCentros();
     actualizarSelectCentros();
     actualizarSelectPrevisionDashboard();
+    actualizarSelectFiltrosTurnos();
     migrarCentrosDesdePacientes();
     actualizarContador();
 
@@ -141,6 +176,7 @@ async function onSesionIniciada(user) {
     // interrumpir al usuario en otras pantallas.
     if (document.getElementById('section-dashboard')?.classList.contains('active')) cargarDashboard();
     if (document.getElementById('section-buscar')?.classList.contains('active')) buscarPacientes();
+    if (document.getElementById('section-turnos')?.classList.contains('active')) iniciarSeccionTurnos();
   };
 
   try {
@@ -278,6 +314,11 @@ Object.assign(window, {
   eliminarPrevision,
   cerrarEditarPrevisionModal,
   confirmarEditarPrevision,
+  agregarTipoTurno,
+  editarTipoTurno,
+  cerrarEditarTipoTurnoModal,
+  confirmarEditarTipoTurno,
+  eliminarTipoTurno,
   editarRegistro,
   eliminarRegistro,
   guardarEdicion,
@@ -285,7 +326,25 @@ Object.assign(window, {
   cerrarEditModal,
   cerrarModalDuplicado,
   confirmarAccion,
-  cerrarAviso
+  cerrarAviso,
+  cambiarMesTurnos,
+  abrirDiaTurnoModal,
+  cerrarDiaTurnoModal,
+  actualizarTiposTurnoDisponibles,
+  autocompletarValorHora,
+  calcularTotalTurno,
+  agregarTurno,
+  editarTurno,
+  actualizarTiposTurnoEdicion,
+  autocompletarValorHoraEdicion,
+  calcularTotalTurnoEdicion,
+  cerrarEditarTurnoModal,
+  confirmarEditarTurno,
+  eliminarTurno,
+  generarInformeTurnos,
+  descargarInformeTurnosPDF,
+  descargarInformeTurnosExcel,
+  aplicarRangoTurnos
 });
 
 document.addEventListener('DOMContentLoaded', () => {

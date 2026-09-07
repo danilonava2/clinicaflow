@@ -419,14 +419,19 @@ label {
 
 /* MODALES */
 .modal {
-  display: none; 
-  position: fixed; 
+  display: none;
+  position: fixed;
   top: 0; left: 0;
-  width: 100%; height: 100%; 
+  width: 100%; height: 100%;
   background: rgba(0,0,0,0.7);
-  z-index: 1000; 
-  align-items: center; 
+  z-index: 1000;
+  align-items: center;
   justify-content: center;
+}
+/* Confirmar/aviso pueden abrirse desde DENTRO de otro modal (ej. eliminar
+   un turno desde el modal del dia) - deben quedar siempre por encima. */
+#confirmModal, #avisoModal {
+  z-index: 4000;
 }
 .modal-content {
   background: white;
@@ -815,6 +820,62 @@ label {
   color: #16a34a;
 }
 
+/* CALENDARIO DE TURNOS */
+.calendario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.calendario-header h3 {
+  font-size: 17px;
+  color: #1e2937;
+}
+.calendario-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.calendario-dia-nombre {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  padding-bottom: 6px;
+}
+.calendario-celda {
+  min-height: 80px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.1s ease;
+  overflow: hidden;
+}
+.calendario-celda:hover { background: #eff6ff; transform: scale(1.02); }
+.calendario-celda-vacia { background: transparent; border: none; cursor: default; }
+.calendario-celda-vacia:hover { background: transparent; transform: none; }
+.calendario-celda-hoy { border: 2px solid #3b82f6; }
+.calendario-dia-numero { font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px; }
+.calendario-dia-registros { display: flex; flex-direction: column; gap: 2px; }
+.calendario-registro-mini {
+  font-size: 10px;
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 2px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 768px) {
+  .calendario-celda { min-height: 60px; padding: 4px; }
+  .calendario-dia-numero { font-size: 11px; }
+  .calendario-registro-mini { font-size: 9px; padding: 1px 3px; }
+  .calendario-dia-nombre { font-size: 10px; }
+}
+
 /* CENTROS */
 .centros-grid {
   display: flex;
@@ -964,6 +1025,24 @@ label {
 
 :root[data-theme="dark"] .prevision-item {
   background: #1e293b;
+}
+
+:root[data-theme="dark"] .calendario-header h3 {
+  color: #f1f5f9;
+}
+:root[data-theme="dark"] .calendario-celda {
+  background: #17233b;
+  border-color: #334155;
+}
+:root[data-theme="dark"] .calendario-celda:hover {
+  background: #1e3a5f;
+}
+:root[data-theme="dark"] .calendario-dia-numero {
+  color: #e2e8f0;
+}
+:root[data-theme="dark"] .calendario-registro-mini {
+  background: #1e3a5f;
+  color: #93c5fd;
 }
 
 :root[data-theme="dark"] label,

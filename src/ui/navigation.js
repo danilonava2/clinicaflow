@@ -1,4 +1,5 @@
 import { cargarDashboard } from '../modules/dashboard.js';
+import { iniciarSeccionTurnos } from '../modules/turnos.js';
 
 export function seleccionarSeccion(section) {
   document.querySelectorAll('.menu-item').forEach((item) => {
@@ -14,6 +15,7 @@ export function seleccionarSeccion(section) {
   if (targetSection) targetSection.classList.add('active');
 
   if (section === 'dashboard') cargarDashboard();
+  if (section === 'turnos') iniciarSeccionTurnos();
 }
 
 export function setupNavigation() {
