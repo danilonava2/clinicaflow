@@ -64,18 +64,22 @@ function buscarRegistrosAnteriores(rut) {
 function mostrarAdvertenciaDuplicado(rut, nuevoRegistro) {
   const previos = buscarRegistrosAnteriores(rut);
   if (previos.length === 0) return false;
-  let html = `<p>⚠️ Este RUT ya tiene ${previos.length} atención(es):</p>
-    <table style="width:100%; border-collapse:collapse;">
-      <thead><tr><th>Fecha</th><th>Monto</th><th>Centro</th></tr></thead>
-      <tbody>`;
+
+  let html = `<p class="duplicado-intro">Este RUT ya tiene <b>${previos.length} atención${previos.length === 1 ? '' : 'es'}</b> registrada${previos.length === 1 ? '' : 's'}:</p>
+    <div class="previsiones-list duplicado-lista">`;
   previos.forEach((r) => {
-    html += `<tr><td style="padding:8px;">${r.fecha}</td><td style="padding:8px;">${formatearMonto(r.monto)}</td><td style="padding:8px;">${r.institucion || '-'}</td></tr>`;
+    html += `<div class="prevision-item">
+      <span>📅 ${formatearFecha(r.fecha)} — 🏥 ${escapeHtml(r.institucion || 'Sin centro')}</span>
+      <b>${formatearMonto(r.monto)}</b>
+    </div>`;
   });
   const total = previos.reduce((s, r) => s + (Number(r.monto) || 0), 0);
-  html += `</tbody>
-    </table>
-    <div>💰 Total acumulado: ${formatearMonto(total)}</div>
-    <p>¿Registrar nueva atención?</p>`;
+  html += `</div>
+    <div class="duplicado-total">
+      <span>💰 Total acumulado</span>
+      <span class="monto">${formatearMonto(total)}</span>
+    </div>
+    <p class="duplicado-pregunta">¿Quieres registrar esta nueva atención de todas formas?</p>`;
   abrirModalDuplicado(html, nuevoRegistro);
   return true;
 }
