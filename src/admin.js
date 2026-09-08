@@ -33,6 +33,7 @@ async function adminLogout() {
 function calcularFechaVencimiento(tipo) {
   const fecha = new Date();
   if (tipo === 'mensual') fecha.setMonth(fecha.getMonth() + 1);
+  else if (tipo === 'prueba') fecha.setDate(fecha.getDate() + 7);
   else fecha.setFullYear(fecha.getFullYear() + 1);
   return fecha.toISOString().slice(0, 10);
 }
@@ -78,6 +79,7 @@ async function cargarUsuarios() {
         <td>
           ${esPro ? `<button class="btn-secondary btn-quitar-plan" data-uid="${u.uid}">Quitar Pro</button>` : ''}
           <button class="btn-primary btn-activar-plan" data-uid="${u.uid}" style="margin-left:5px;">${esPro ? 'Renovar' : 'Activar Pro'}</button>
+          ${!esPro ? `<button class="btn-secondary btn-prueba-plan" data-uid="${u.uid}" style="margin-left:5px;background:#8b5cf6;color:white;">🎁 Prueba 7 días</button>` : ''}
         </td>
       </tr>`;
     });
@@ -117,6 +119,20 @@ async function cargarUsuarios() {
           await cargarUsuarios();
         } catch (error) {
           alert('Error al quitar el plan: ' + error.message);
+          btn.disabled = false;
+        }
+      });
+    });
+
+    contenedor.querySelectorAll('.btn-prueba-plan').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.innerText = 'Guardando...';
+        try {
+          await cambiarPlanUsuario(btn.dataset.uid, 'pro', calcularFechaVencimiento('prueba'));
+          await cargarUsuarios();
+        } catch (error) {
+          alert('Error al activar la prueba: ' + error.message);
           btn.disabled = false;
         }
       });
