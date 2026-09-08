@@ -31,7 +31,12 @@ import {
   editarTipoTurno,
   cerrarEditarTipoTurnoModal,
   confirmarEditarTipoTurno,
-  eliminarTipoTurno
+  eliminarTipoTurno,
+  agregarTipoCirugia,
+  editarTipoCirugia,
+  cerrarEditarTipoCirugiaModal,
+  confirmarEditarTipoCirugia,
+  eliminarTipoCirugia
 } from './modules/centros.js';
 import {
   actualizarContador,
@@ -76,6 +81,26 @@ import {
   descargarInformeTurnosExcel,
   actualizarDescuentoInformeTurnos
 } from './modules/turnos.js';
+import {
+  iniciarSeccionCirugias,
+  actualizarSelectFiltrosCirugias,
+  cambiarMesCirugias,
+  abrirDiaCirugiaModal,
+  cerrarDiaCirugiaModal,
+  actualizarTiposCirugiaDisponibles,
+  autocompletarMontoCirugia,
+  agregarCirugia,
+  editarCirugia,
+  actualizarTiposCirugiaEdicion,
+  autocompletarMontoCirugiaEdicion,
+  cerrarEditarCirugiaModal,
+  confirmarEditarCirugia,
+  eliminarCirugia,
+  generarInformeCirugias,
+  descargarInformeCirugiasPDF,
+  descargarInformeCirugiasExcel,
+  actualizarDescuentoInformeCirugias
+} from './modules/cirugias.js';
 
 function mostrarPantallaApp() {
   document.getElementById('loginScreen').style.display = 'none';
@@ -154,15 +179,37 @@ function aplicarRangoTurnos(tipo) {
   generarInformeTurnos();
 }
 
+function aplicarRangoCirugias(tipo) {
+  const rango = calcularRangoRapido(tipo);
+  if (!rango) return;
+  document.getElementById('cirugiasFechaInicio').value = rango.inicio;
+  document.getElementById('cirugiasFechaFin').value = rango.fin;
+  generarInformeCirugias();
+}
+
 function cambiarPestanaReportes(tab) {
   document.getElementById('tabPoliclinico').classList.toggle('active', tab === 'policlinico');
   document.getElementById('tabTurnos').classList.toggle('active', tab === 'turnos');
+  document.getElementById('tabCirugias').classList.toggle('active', tab === 'cirugias');
   document.getElementById('reportePoliclinicoTab').style.display = tab === 'policlinico' ? 'block' : 'none';
   document.getElementById('reporteTurnosTab').style.display = tab === 'turnos' ? 'block' : 'none';
+  document.getElementById('reporteCirugiasTab').style.display = tab === 'cirugias' ? 'block' : 'none';
 
   if (tab === 'turnos') {
     const gate = document.getElementById('turnosReporteProGate');
     const contenido = document.getElementById('turnosReporteContenido');
+    if (esPlanPro()) {
+      gate.style.display = 'none';
+      contenido.style.display = 'block';
+    } else {
+      gate.style.display = 'block';
+      contenido.style.display = 'none';
+    }
+  }
+
+  if (tab === 'cirugias') {
+    const gate = document.getElementById('cirugiasReporteProGate');
+    const contenido = document.getElementById('cirugiasReporteContenido');
     if (esPlanPro()) {
       gate.style.display = 'none';
       contenido.style.display = 'block';
@@ -216,6 +263,7 @@ async function onSesionIniciada(user) {
     actualizarSelectCentros();
     actualizarSelectPrevisionDashboard();
     actualizarSelectFiltrosTurnos();
+    actualizarSelectFiltrosCirugias();
     migrarCentrosDesdePacientes();
     actualizarContador();
     actualizarInfoPlan();
@@ -234,6 +282,7 @@ async function onSesionIniciada(user) {
     if (document.getElementById('section-dashboard')?.classList.contains('active')) cargarDashboard();
     if (document.getElementById('section-buscar')?.classList.contains('active')) buscarPacientes();
     if (document.getElementById('section-turnos')?.classList.contains('active')) iniciarSeccionTurnos();
+    if (document.getElementById('section-cirugias')?.classList.contains('active')) iniciarSeccionCirugias();
   };
 
   try {
@@ -401,7 +450,29 @@ Object.assign(window, {
   descargarInformeTurnosPDF,
   descargarInformeTurnosExcel,
   actualizarDescuentoInformeTurnos,
-  aplicarRangoTurnos
+  aplicarRangoTurnos,
+  agregarTipoCirugia,
+  editarTipoCirugia,
+  cerrarEditarTipoCirugiaModal,
+  confirmarEditarTipoCirugia,
+  eliminarTipoCirugia,
+  cambiarMesCirugias,
+  abrirDiaCirugiaModal,
+  cerrarDiaCirugiaModal,
+  actualizarTiposCirugiaDisponibles,
+  autocompletarMontoCirugia,
+  agregarCirugia,
+  editarCirugia,
+  actualizarTiposCirugiaEdicion,
+  autocompletarMontoCirugiaEdicion,
+  cerrarEditarCirugiaModal,
+  confirmarEditarCirugia,
+  eliminarCirugia,
+  generarInformeCirugias,
+  descargarInformeCirugiasPDF,
+  descargarInformeCirugiasExcel,
+  actualizarDescuentoInformeCirugias,
+  aplicarRangoCirugias
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -418,6 +489,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('editRut')?.addEventListener('input', () => actualizarIndicadorRUT('editRut', 'editRutStatus'));
   document.getElementById('reporteRut')?.addEventListener('input', () => actualizarIndicadorRUT('reporteRut', 'reporteRutStatus'));
+  document.getElementById('cirugiaRutInput')?.addEventListener('input', (e) => {
+    formatearRutInput(e.target);
+    actualizarIndicadorRUT('cirugiaRutInput', 'cirugiaRutStatus');
+  });
+  document.getElementById('editarCirugiaRutInput')?.addEventListener('input', (e) => {
+    formatearRutInput(e.target);
+    actualizarIndicadorRUT('editarCirugiaRutInput', 'editarCirugiaRutStatus');
+  });
+  document.getElementById('cirugiasReporteRut')?.addEventListener('input', () =>
+    actualizarIndicadorRUT('cirugiasReporteRut', 'cirugiasReporteRutStatus')
+  );
 
   document.getElementById('selectInstitucion')?.addEventListener('change', () =>
     actualizarPrevisionesDisponibles('selectInstitucion', 'selectPrevision')

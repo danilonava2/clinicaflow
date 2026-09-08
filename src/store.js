@@ -7,6 +7,7 @@ export const state = {
   pacientes: [],
   centros: [],
   turnos: [],
+  cirugias: [],
   plan: 'gratis',
   planVenceEl: null
 };
@@ -32,8 +33,13 @@ let detenerEscucha = null;
 // viejos al formato nuevo sin perder informacion.
 function normalizarCentros(centros) {
   return (centros || []).map((c) => {
-    if (typeof c === 'string') return { nombre: c, previsiones: [], tiposTurno: [] };
-    return { nombre: c.nombre, previsiones: c.previsiones || [], tiposTurno: c.tiposTurno || [] };
+    if (typeof c === 'string') return { nombre: c, previsiones: [], tiposTurno: [], tiposCirugia: [] };
+    return {
+      nombre: c.nombre,
+      previsiones: c.previsiones || [],
+      tiposTurno: c.tiposTurno || [],
+      tiposCirugia: c.tiposCirugia || []
+    };
   });
 }
 
@@ -48,10 +54,11 @@ export function iniciarSincronizacion(uid, onDatosActualizados) {
     () =>
       new Promise((resolve) => {
         let esPrimeraVez = true;
-        detenerEscucha = escucharDatosUsuario(uid, ({ pacientes, centros, turnos, plan, planVenceEl }) => {
+        detenerEscucha = escucharDatosUsuario(uid, ({ pacientes, centros, turnos, cirugias, plan, planVenceEl }) => {
           state.pacientes = pacientes;
           state.centros = normalizarCentros(centros.length ? centros : centrosPorDefecto());
           state.turnos = turnos || [];
+          state.cirugias = cirugias || [];
           state.plan = plan || 'gratis';
           state.planVenceEl = planVenceEl || null;
 
@@ -87,7 +94,8 @@ export async function guardarDatos() {
     await guardarFirestore(state.currentUser.uid, {
       pacientes: state.pacientes,
       centros: state.centros,
-      turnos: state.turnos
+      turnos: state.turnos,
+      cirugias: state.cirugias
     });
   } catch (error) {
     console.error('Error al guardar en Firestore:', error);
@@ -98,6 +106,7 @@ export function resetState() {
   state.pacientes = [];
   state.centros = normalizarCentros(centrosPorDefecto());
   state.turnos = [];
+  state.cirugias = [];
   state.plan = 'gratis';
   state.planVenceEl = null;
 }

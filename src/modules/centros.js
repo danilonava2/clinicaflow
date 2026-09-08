@@ -77,6 +77,29 @@ export function renderListaCentros() {
         <button onclick="agregarTipoTurno(${index})" class="btn-secondary">+ Agregar tipo de turno</button>
       </div>
     </div>
+    <div class="previsiones-list">
+      <p style="font-size:12px; font-weight:600; color:#94a3b8; margin:0 0 4px 0;">🔪 TIPOS DE CIRUGÍA (Pro)</p>`;
+
+    if (centro.tiposCirugia.length === 0) {
+      html += '<p style="color:#94a3b8; font-size:13px; margin:0;">Sin tipos de cirugía configurados todavía.</p>';
+    } else {
+      centro.tiposCirugia.forEach((tipo, tipoIndex) => {
+        html += `<div class="prevision-item">
+          <span>🔪 ${escapeHtml(tipo.nombre)} — ${formatearMonto(tipo.monto)}</span>
+          <div>
+            <button onclick="editarTipoCirugia(${index},${tipoIndex})" class="btn-edit" style="margin-right:5px;">✏️</button>
+            <button onclick="eliminarTipoCirugia(${index},${tipoIndex})" class="btn-delete">🗑️</button>
+          </div>
+        </div>`;
+      });
+    }
+
+    html += `<div class="prevision-add-form">
+        <input type="text" id="nuevoTipoCirugiaNombre-${index}" placeholder="Nombre (ej: Apendicectomía)">
+        <input type="number" id="nuevoTipoCirugiaMonto-${index}" placeholder="Monto">
+        <button onclick="agregarTipoCirugia(${index})" class="btn-secondary">+ Agregar tipo de cirugía</button>
+      </div>
+    </div>
     </div>`;
   });
   html += '</div>';
@@ -125,6 +148,7 @@ export function confirmarRenombrarCentro() {
     return p;
   });
   state.turnos = state.turnos.map((t) => (t.centro === nombreAnterior ? { ...t, centro: nuevoNombre } : t));
+  state.cirugias = state.cirugias.map((c) => (c.centro === nombreAnterior ? { ...c, centro: nuevoNombre } : c));
 
   guardarDatos();
   renderListaCentros();
@@ -188,8 +212,10 @@ export async function confirmarEliminarCentro() {
     if (!(await pedirConfirmacion(`¿Eliminar ${cantidad} registro(s) junto con el centro "${centro.nombre}"?`))) return;
     const eliminados = state.pacientes.filter((p) => p.institucion === centro.nombre);
     const turnosEliminados = state.turnos.filter((t) => t.centro === centro.nombre);
+    const cirugiasEliminadas = state.cirugias.filter((c) => c.centro === centro.nombre);
     state.pacientes = state.pacientes.filter((p) => p.institucion !== centro.nombre);
     state.turnos = state.turnos.filter((t) => t.centro !== centro.nombre);
+    state.cirugias = state.cirugias.filter((c) => c.centro !== centro.nombre);
     state.centros.splice(index, 1);
     guardarDatos();
     refrescarTodoCentros();
@@ -198,6 +224,7 @@ export async function confirmarEliminarCentro() {
       state.centros.splice(index, 0, centro);
       state.pacientes.unshift(...eliminados);
       state.turnos.unshift(...turnosEliminados);
+      state.cirugias.unshift(...cirugiasEliminadas);
       guardarDatos();
       refrescarTodoCentros();
       refrescarVistasDependientes();
@@ -210,8 +237,10 @@ export async function confirmarEliminarCentro() {
     }
     const idsReasignados = state.pacientes.filter((p) => p.institucion === centro.nombre).map((p) => p.id);
     const idsTurnosReasignados = state.turnos.filter((t) => t.centro === centro.nombre).map((t) => t.id);
+    const idsCirugiasReasignadas = state.cirugias.filter((c) => c.centro === centro.nombre).map((c) => c.id);
     state.pacientes = state.pacientes.map((p) => (p.institucion === centro.nombre ? { ...p, institucion: nuevoNombre } : p));
     state.turnos = state.turnos.map((t) => (t.centro === centro.nombre ? { ...t, centro: nuevoNombre } : t));
+    state.cirugias = state.cirugias.map((c) => (c.centro === centro.nombre ? { ...c, centro: nuevoNombre } : c));
     state.centros.splice(index, 1);
     guardarDatos();
     refrescarTodoCentros();
@@ -223,6 +252,9 @@ export async function confirmarEliminarCentro() {
         idsReasignados.includes(p.id) ? { ...p, institucion: centro.nombre } : p
       );
       state.turnos = state.turnos.map((t) => (idsTurnosReasignados.includes(t.id) ? { ...t, centro: centro.nombre } : t));
+      state.cirugias = state.cirugias.map((c) =>
+        idsCirugiasReasignadas.includes(c.id) ? { ...c, centro: centro.nombre } : c
+      );
       guardarDatos();
       refrescarTodoCentros();
       refrescarVistasDependientes();
@@ -249,7 +281,7 @@ export function agregarCentro() {
     mostrarAviso('Ya existe un centro con ese nombre', 'advertencia');
     return;
   }
-  state.centros.push({ nombre, previsiones: [], tiposTurno: [] });
+  state.centros.push({ nombre, previsiones: [], tiposTurno: [], tiposCirugia: [] });
   guardarDatos();
   renderListaCentros();
   actualizarSelectCentros();
@@ -401,6 +433,81 @@ export async function eliminarTipoTurno(centroIndex, tipoIndex) {
   });
 }
 
+// ==================== TIPOS DE CIRUGÍA ====================
+export function agregarTipoCirugia(centroIndex) {
+  const nombreInput = document.getElementById(`nuevoTipoCirugiaNombre-${centroIndex}`);
+  const montoInput = document.getElementById(`nuevoTipoCirugiaMonto-${centroIndex}`);
+  const nombre = nombreInput.value.trim();
+  const monto = parseInt(montoInput.value) || 0;
+  if (!nombre) {
+    mostrarAviso('Ingresa un nombre para el tipo de cirugía', 'advertencia');
+    return;
+  }
+  const centro = state.centros[centroIndex];
+  if (centro.tiposCirugia.some((t) => t.nombre === nombre)) {
+    mostrarAviso('Ya existe un tipo de cirugía con ese nombre en este centro', 'advertencia');
+    return;
+  }
+  centro.tiposCirugia.push({ nombre, monto });
+  guardarDatos();
+  renderListaCentros();
+  mostrarToast(`Tipo de cirugía "${nombre}" agregado`, 'exito');
+}
+
+export function editarTipoCirugia(centroIndex, tipoIndex) {
+  const tipo = state.centros[centroIndex].tiposCirugia[tipoIndex];
+  document.getElementById('editarTipoCirugiaCentroIndex').value = centroIndex;
+  document.getElementById('editarTipoCirugiaIndex').value = tipoIndex;
+  document.getElementById('editarTipoCirugiaNombreInput').value = tipo.nombre;
+  document.getElementById('editarTipoCirugiaMontoInput').value = tipo.monto;
+  document.getElementById('editarTipoCirugiaModal').style.display = 'flex';
+}
+
+export function cerrarEditarTipoCirugiaModal() {
+  document.getElementById('editarTipoCirugiaModal').style.display = 'none';
+}
+
+export function confirmarEditarTipoCirugia() {
+  const centroIndex = parseInt(document.getElementById('editarTipoCirugiaCentroIndex').value);
+  const tipoIndex = parseInt(document.getElementById('editarTipoCirugiaIndex').value);
+  const centro = state.centros[centroIndex];
+  const tipo = centro.tiposCirugia[tipoIndex];
+
+  const nuevoNombre = document.getElementById('editarTipoCirugiaNombreInput').value.trim();
+  const nuevoMonto = parseInt(document.getElementById('editarTipoCirugiaMontoInput').value) || 0;
+  const nombreAnterior = tipo.nombre;
+
+  tipo.nombre = nuevoNombre || tipo.nombre;
+  tipo.monto = nuevoMonto;
+
+  // Las cirugias ya registradas con este tipo tambien deben reflejar el
+  // cambio de nombre, igual que se hace con los tipos de turno.
+  if (tipo.nombre !== nombreAnterior) {
+    state.cirugias = state.cirugias.map((c) =>
+      c.centro === centro.nombre && c.tipo === nombreAnterior ? { ...c, tipo: tipo.nombre } : c
+    );
+  }
+
+  guardarDatos();
+  renderListaCentros();
+  cerrarEditarTipoCirugiaModal();
+  mostrarToast('Tipo de cirugía actualizado.', 'exito');
+}
+
+export async function eliminarTipoCirugia(centroIndex, tipoIndex) {
+  const centro = state.centros[centroIndex];
+  const tipo = centro.tiposCirugia[tipoIndex];
+  if (!(await pedirConfirmacion(`¿Eliminar el tipo de cirugía "${tipo.nombre}"?`))) return;
+  const [eliminado] = centro.tiposCirugia.splice(tipoIndex, 1);
+  guardarDatos();
+  renderListaCentros();
+  mostrarToastConDeshacer('Tipo de cirugía eliminado.', () => {
+    centro.tiposCirugia.splice(tipoIndex, 0, eliminado);
+    guardarDatos();
+    renderListaCentros();
+  });
+}
+
 // ==================== SELECTS COMPARTIDOS ====================
 export function actualizarSelectCentros() {
   const selects = [
@@ -487,7 +594,7 @@ export function migrarCentrosDesdePacientes() {
   const nombresActuales = new Set(state.centros.map((c) => c.nombre));
   const nuevos = Array.from(existentes).filter((nombre) => !nombresActuales.has(nombre));
   if (nuevos.length) {
-    nuevos.forEach((nombre) => state.centros.push({ nombre, previsiones: [], tiposTurno: [] }));
+    nuevos.forEach((nombre) => state.centros.push({ nombre, previsiones: [], tiposTurno: [], tiposCirugia: [] }));
     guardarDatos();
   }
 }

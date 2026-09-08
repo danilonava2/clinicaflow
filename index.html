@@ -111,6 +111,7 @@
         <button data-section="pagos" class="mobile-menu-btn">💰 Reportes</button>
         <button data-section="centros" class="mobile-menu-btn">🏥 Centros</button>
         <button data-section="turnos" class="mobile-menu-btn">🕐 Turnos</button>
+        <button data-section="cirugias" class="mobile-menu-btn">🔪 Cirugías</button>
       </div>
       <button class="mobile-config-icon" onclick="toggleConfigMenu()">⚙️</button>
     </div>
@@ -147,6 +148,7 @@
       <a href="#" class="menu-item" data-section="pagos"><span>💰 Reportes</span></a>
       <a href="#" class="menu-item" data-section="centros"><span>🏥 Centros</span></a>
       <a href="#" class="menu-item" data-section="turnos"><span>🕐 Turnos ⭐</span></a>
+      <a href="#" class="menu-item" data-section="cirugias"><span>🔪 Cirugías ⭐</span></a>
       <a href="#" class="menu-item" data-section="manual"><span>📖 Manual</span></a>
 
       <a href="planes.html" target="_blank" class="menu-item" style="background:#eff6ff;color:#1e40af;">💎 Ver Planes</a>
@@ -328,6 +330,7 @@
       <div class="reporte-tabs">
         <button type="button" onclick="cambiarPestanaReportes('policlinico')" class="reporte-tab-btn active" id="tabPoliclinico">📋 Policlínico</button>
         <button type="button" onclick="cambiarPestanaReportes('turnos')" class="reporte-tab-btn" id="tabTurnos">🕐 Turnos / Horas Extras ⭐</button>
+        <button type="button" onclick="cambiarPestanaReportes('cirugias')" class="reporte-tab-btn" id="tabCirugias">🔪 Cirugías ⭐</button>
       </div>
 
       <div id="reportePoliclinicoTab">
@@ -371,6 +374,35 @@
           <div id="informeTurnosPaginacion" class="pagination-container"></div>
         </div>
       </div>
+
+      <div id="reporteCirugiasTab" style="display:none;">
+        <div class="card" id="cirugiasReporteProGate" style="display:none;">
+          <div class="reporte-vacio">🔒 Esta sección es exclusiva del plan Pro. Actualiza tu plan para ver el informe de cirugías.</div>
+        </div>
+        <div class="card" id="cirugiasReporteContenido" style="display:none;">
+          <div class="filtros-rapidos">
+            <button type="button" onclick="aplicarRangoCirugias('hoy')" class="btn-chip">Hoy</button>
+            <button type="button" onclick="aplicarRangoCirugias('semana')" class="btn-chip">Esta semana</button>
+            <button type="button" onclick="aplicarRangoCirugias('mes')" class="btn-chip">Este mes</button>
+          </div>
+          <div class="advanced-filters">
+            <div><label>📅 Desde</label><input type="date" id="cirugiasFechaInicio"></div>
+            <div><label>📅 Hasta</label><input type="date" id="cirugiasFechaFin"></div>
+            <div><label>👤 Paciente</label><input type="text" id="cirugiasReporteNombre" placeholder="Nombre"></div>
+            <div><label>🆔 RUT</label>
+              <div class="rut-input-wrap">
+                <input type="text" id="cirugiasReporteRut" placeholder="RUT">
+                <span class="rut-status" id="cirugiasReporteRutStatus"></span>
+              </div>
+            </div>
+            <div><label>🏥 Centro</label><select id="cirugiasFiltroCentro"><option value="">Todos los centros</option></select></div>
+            <div><label>🔪 Tipo</label><select id="cirugiasFiltroTipo"><option value="">Todos los tipos</option></select></div>
+            <button onclick="generarInformeCirugias()" class="btn-primary">📄 Generar</button>
+          </div>
+          <div id="informeCirugiasContainer"></div>
+          <div id="informeCirugiasPaginacion" class="pagination-container"></div>
+        </div>
+      </div>
     </div>
 
     <!-- GESTIÓN DE CENTROS -->
@@ -403,6 +435,27 @@
           <div class="calendario-grid" id="calendarioGrid"></div>
         </div>
         <p style="text-align:center; color:#94a3b8; font-size:13px;">📊 El informe y las exportaciones de turnos están en "Reportes".</p>
+      </div>
+    </div>
+
+    <!-- CIRUGÍAS (PRO) -->
+    <div id="section-cirugias" class="section">
+      <h2>🔪 Cirugías</h2>
+
+      <div class="card" id="cirugiasProGate" style="display:none;">
+        <div class="reporte-vacio">🔒 Esta sección es exclusiva del plan Pro. Actualiza tu plan para registrar cirugías.</div>
+      </div>
+
+      <div id="cirugiasContenido" style="display:none;">
+        <div class="card">
+          <div class="calendario-header">
+            <button onclick="cambiarMesCirugias(-1)" class="btn-secondary">⬅</button>
+            <h3 id="cirugiasMesLabel"></h3>
+            <button onclick="cambiarMesCirugias(1)" class="btn-secondary">➡</button>
+          </div>
+          <div class="calendario-grid" id="calendarioCirugiasGrid"></div>
+        </div>
+        <p style="text-align:center; color:#94a3b8; font-size:13px;">📊 El informe y las exportaciones de cirugías están en "Reportes".</p>
       </div>
     </div>
 
@@ -518,6 +571,21 @@
     </div>
   </div>
 </div>
+<div id="editarTipoCirugiaModal" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Editar Tipo de Cirugía</h3>
+    <input type="hidden" id="editarTipoCirugiaCentroIndex">
+    <input type="hidden" id="editarTipoCirugiaIndex">
+    <label>Nombre</label>
+    <input type="text" id="editarTipoCirugiaNombreInput">
+    <label>Monto</label>
+    <input type="number" id="editarTipoCirugiaMontoInput">
+    <div class="modal-actions">
+      <button onclick="confirmarEditarTipoCirugia()" class="btn-primary">Guardar</button>
+      <button onclick="cerrarEditarTipoCirugiaModal()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
 <div id="diaTurnoModal" class="modal">
   <div class="modal-content">
     <h3>📅 <span id="diaTurnoFechaLabel"></span></h3>
@@ -556,6 +624,53 @@
     <div class="modal-actions">
       <button onclick="confirmarEditarTurno()" class="btn-primary">Guardar</button>
       <button onclick="cerrarEditarTurnoModal()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+<div id="diaCirugiaModal" class="modal">
+  <div class="modal-content">
+    <h3>📅 <span id="diaCirugiaFechaLabel"></span></h3>
+    <div id="diaCirugiaLista"></div>
+    <p style="font-size:12px; font-weight:600; color:#94a3b8; margin:0 0 8px 0;">➕ AGREGAR CIRUGÍA</p>
+    <label>Centro</label>
+    <select id="cirugiaCentroSelect" onchange="actualizarTiposCirugiaDisponibles()"></select>
+    <label>Tipo de cirugía</label>
+    <select id="cirugiaTipoSelect" onchange="autocompletarMontoCirugia()" disabled></select>
+    <label>Paciente</label>
+    <input type="text" id="cirugiaPacienteInput" placeholder="Nombre completo">
+    <label>RUT</label>
+    <div class="rut-input-wrap">
+      <input type="text" id="cirugiaRutInput" placeholder="12.345.678-9">
+      <span class="rut-status" id="cirugiaRutStatus"></span>
+    </div>
+    <label>Monto</label>
+    <input type="number" id="cirugiaMontoInput">
+    <div class="modal-actions">
+      <button onclick="agregarCirugia()" class="btn-primary">+ Agregar Cirugía</button>
+      <button onclick="cerrarDiaCirugiaModal()" class="btn-secondary">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div id="editarCirugiaModal" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Editar Cirugía</h3>
+    <input type="hidden" id="editarCirugiaId">
+    <label>Centro</label>
+    <select id="editarCirugiaCentroSelect" onchange="actualizarTiposCirugiaEdicion()"></select>
+    <label>Tipo de cirugía</label>
+    <select id="editarCirugiaTipoSelect" onchange="autocompletarMontoCirugiaEdicion()"></select>
+    <label>Paciente</label>
+    <input type="text" id="editarCirugiaPacienteInput">
+    <label>RUT</label>
+    <div class="rut-input-wrap">
+      <input type="text" id="editarCirugiaRutInput">
+      <span class="rut-status" id="editarCirugiaRutStatus"></span>
+    </div>
+    <label>Monto</label>
+    <input type="number" id="editarCirugiaMontoInput">
+    <div class="modal-actions">
+      <button onclick="confirmarEditarCirugia()" class="btn-primary">Guardar</button>
+      <button onclick="cerrarEditarCirugiaModal()" class="btn-secondary">Cancelar</button>
     </div>
   </div>
 </div>

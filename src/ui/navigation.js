@@ -1,5 +1,6 @@
 import { cargarDashboard } from '../modules/dashboard.js';
 import { iniciarSeccionTurnos } from '../modules/turnos.js';
+import { iniciarSeccionCirugias } from '../modules/cirugias.js';
 
 export function seleccionarSeccion(section) {
   document.querySelectorAll('.menu-item').forEach((item) => {
@@ -16,6 +17,7 @@ export function seleccionarSeccion(section) {
 
   if (section === 'dashboard') cargarDashboard();
   if (section === 'turnos') iniciarSeccionTurnos();
+  if (section === 'cirugias') iniciarSeccionCirugias();
 }
 
 export function setupNavigation() {

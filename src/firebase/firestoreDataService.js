@@ -1,7 +1,7 @@
 import { doc, getDoc, setDoc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import { firestoreDb } from './config.js';
 
-export async function guardarDatosUsuario(uid, { pacientes, centros, turnos }) {
+export async function guardarDatosUsuario(uid, { pacientes, centros, turnos, cirugias }) {
   // merge:true es importante: sin esto, cada guardado reemplazaria el
   // documento entero y borraria campos como "plan" o "email".
   await setDoc(
@@ -10,6 +10,7 @@ export async function guardarDatosUsuario(uid, { pacientes, centros, turnos }) {
       pacientes,
       centros,
       turnos,
+      cirugias,
       migrado: true,
       ultimaActualizacion: Date.now()
     },
@@ -45,6 +46,7 @@ export function escucharDatosUsuario(uid, onCambio) {
         pacientes: data.pacientes || [],
         centros: data.centros || [],
         turnos: data.turnos || [],
+        cirugias: data.cirugias || [],
         plan: data.plan || 'gratis',
         planVenceEl: data.planVenceEl || null
       });
