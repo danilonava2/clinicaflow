@@ -1,12 +1,13 @@
 import { auth } from './firebase/config.js';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { listarTodosLosUsuarios, cambiarPlanUsuario } from './firebase/firestoreDataService.js';
+import { escucharTodosLosUsuarios, cambiarPlanUsuario } from './firebase/firestoreDataService.js';
 
 // Solo esta cuenta puede ver y usar este panel (ademas de estar reforzado
 // en firestore.rules, que es lo que realmente protege los datos).
 const ADMIN_UID = 'VJEehVVQdpVgQqd5g6X6r9xxnyr2';
 
 let usuariosCache = [];
+let detenerEscuchaUsuarios = null;
 
 function mostrarPantalla(id) {
   document.getElementById('loginScreen').style.display = id === 'loginScreen' ? 'flex' : 'none';
@@ -29,6 +30,10 @@ async function adminLogin() {
 }
 
 async function adminLogout() {
+  if (detenerEscuchaUsuarios) {
+    detenerEscuchaUsuarios();
+    detenerEscuchaUsuarios = null;
+  }
   await signOut(auth);
 }
 
@@ -67,32 +72,55 @@ function estadoUsuario(u) {
   return { vencido, esPro, porVencerPronto };
 }
 
+// Filtro de segmento activo (se combina con el texto del buscador).
+// Las tarjetas de resumen tambien funcionan como botones de filtro:
+// un clic activa ese segmento, un segundo clic sobre la misma lo quita.
+let filtroActivo = 'todos';
+
+function pasaSegmento(u, filtro) {
+  if (filtro === 'todos') return true;
+  const { esPro, vencido, porVencerPronto } = estadoUsuario(u);
+  if (filtro === 'pro') return esPro;
+  if (filtro === 'gratis') return !esPro && !vencido;
+  if (filtro === 'vencido') return vencido;
+  if (filtro === 'porVencer') return porVencerPronto;
+  return true;
+}
+
 function renderStats(usuarios) {
   const grid = document.getElementById('adminStatsGrid');
   if (!grid) return;
   const total = usuarios.length;
   const pro = usuarios.filter((u) => estadoUsuario(u).esPro).length;
+  const vencido = usuarios.filter((u) => estadoUsuario(u).vencido).length;
   const porVencer = usuarios.filter((u) => estadoUsuario(u).porVencerPronto).length;
-  const gratis = total - pro;
+  const gratis = total - pro - vencido;
 
-  grid.innerHTML = `
-    <div class="admin-stat-card">
-      <div class="stat-num">${total}</div>
-      <div class="stat-label">👥 Usuarios totales</div>
-    </div>
-    <div class="admin-stat-card stat-pro">
-      <div class="stat-num">${pro}</div>
-      <div class="stat-label">⭐ Plan Pro activo</div>
-    </div>
-    <div class="admin-stat-card stat-gratis">
-      <div class="stat-num">${gratis}</div>
-      <div class="stat-label">🆓 Plan Gratis</div>
-    </div>
-    <div class="admin-stat-card stat-vencer">
-      <div class="stat-num">${porVencer}</div>
-      <div class="stat-label">⏳ Por vencer (≤7 días)</div>
-    </div>
-  `;
+  const tarjetas = [
+    { filtro: 'todos', clase: '', num: total, label: '👥 Usuarios totales' },
+    { filtro: 'pro', clase: 'stat-pro', num: pro, label: '⭐ Plan Pro activo' },
+    { filtro: 'gratis', clase: 'stat-gratis', num: gratis, label: '🆓 Plan Gratis' },
+    { filtro: 'vencido', clase: 'stat-vencido', num: vencido, label: '⚠️ Vencidos' },
+    { filtro: 'porVencer', clase: 'stat-vencer', num: porVencer, label: '⏳ Por vencer (≤7 días)' }
+  ];
+
+  grid.innerHTML = tarjetas
+    .map(
+      (t) => `<div class="admin-stat-card ${t.clase} ${filtroActivo === t.filtro ? 'stat-active' : ''}" data-filtro="${t.filtro}">
+      <div class="stat-num">${t.num}</div>
+      <div class="stat-label">${t.label}</div>
+    </div>`
+    )
+    .join('');
+
+  grid.querySelectorAll('.admin-stat-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const filtro = card.dataset.filtro;
+      filtroActivo = filtroActivo === filtro ? 'todos' : filtro;
+      renderStats(usuariosCache);
+      aplicarFiltro();
+    });
+  });
 }
 
 function renderUsuarios(usuarios) {
@@ -115,7 +143,7 @@ function renderUsuarios(usuarios) {
       etiquetaPlan = u.planVenceEl ? `⭐ Pro · vence ${formatearFechaVencimiento(u.planVenceEl)}` : '⭐ Pro · sin vencimiento';
     } else if (vencido) {
       badgeClass = 'plan-vencido';
-      etiquetaPlan = `⚠️ Vencido (${formatearFechaVencimiento(u.planVenceEl)})`;
+      etiquetaPlan = `⛔ Vencido (${formatearFechaVencimiento(u.planVenceEl)})`;
     }
 
     html += `<div class="admin-user-card">
@@ -152,8 +180,11 @@ function renderUsuarios(usuarios) {
       btn.disabled = true;
       btn.innerText = 'Guardando...';
       try {
+        // No hace falta recargar a mano: el listener en tiempo real
+        // (escucharTodosLosUsuarios) va a refrescar la lista solo apenas
+        // Firestore confirme el cambio, en este dispositivo y en cualquier
+        // otro donde el admin tenga el panel abierto.
         await cambiarPlanUsuario(btn.dataset.uid, 'pro', planVenceEl);
-        await cargarUsuarios();
       } catch (error) {
         alert('Error al activar el plan: ' + error.message);
         btn.disabled = false;
@@ -167,7 +198,6 @@ function renderUsuarios(usuarios) {
       btn.innerText = 'Guardando...';
       try {
         await cambiarPlanUsuario(btn.dataset.uid, 'gratis', null);
-        await cargarUsuarios();
       } catch (error) {
         alert('Error al quitar el plan: ' + error.message);
         btn.disabled = false;
@@ -181,7 +211,6 @@ function renderUsuarios(usuarios) {
       btn.innerText = 'Guardando...';
       try {
         await cambiarPlanUsuario(btn.dataset.uid, 'pro', calcularFechaVencimiento('prueba'));
-        await cargarUsuarios();
       } catch (error) {
         alert('Error al activar la prueba: ' + error.message);
         btn.disabled = false;
@@ -192,24 +221,32 @@ function renderUsuarios(usuarios) {
 
 function aplicarFiltro() {
   const termino = (document.getElementById('adminBuscador')?.value || '').trim().toLowerCase();
-  const filtrados = termino ? usuariosCache.filter((u) => u.email.toLowerCase().includes(termino)) : usuariosCache;
+  const filtrados = usuariosCache.filter((u) => {
+    const pasaTexto = !termino || u.email.toLowerCase().includes(termino);
+    return pasaTexto && pasaSegmento(u, filtroActivo);
+  });
   renderUsuarios(filtrados);
 }
 
-async function cargarUsuarios() {
+function iniciarEscuchaUsuarios() {
   const contenedor = document.getElementById('listaUsuarios');
   contenedor.innerHTML = 'Cargando...';
-  try {
-    usuariosCache = await listarTodosLosUsuarios();
+  // Escucha en tiempo real: si se activa/quita un plan desde otro
+  // dispositivo (o desde este mismo en otra pestaña), la lista y las
+  // tarjetas de resumen se actualizan solas, igual que sincroniza la app.
+  detenerEscuchaUsuarios = escucharTodosLosUsuarios((usuarios) => {
+    usuariosCache = usuarios;
     renderStats(usuariosCache);
     aplicarFiltro();
-  } catch (error) {
-    contenedor.innerHTML = `<p>Error al cargar usuarios: ${error.message}</p>`;
-  }
+  });
 }
 
 onAuthStateChanged(auth, (user) => {
   if (!user) {
+    if (detenerEscuchaUsuarios) {
+      detenerEscuchaUsuarios();
+      detenerEscuchaUsuarios = null;
+    }
     mostrarPantalla('loginScreen');
     return;
   }
@@ -218,7 +255,7 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
   mostrarPantalla('panelAdmin');
-  cargarUsuarios();
+  iniciarEscuchaUsuarios();
 });
 
 document.getElementById('adminBuscador')?.addEventListener('input', aplicarFiltro);

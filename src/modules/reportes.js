@@ -38,10 +38,10 @@ function filtrarPacientes({ nombre, rut, inst, start, end }) {
   });
 }
 
-function agruparPorClave(rows, obtenerClave) {
+function agruparPorClave(rows, obtenerClave, fallback = 'Sin datos') {
   const grupos = {};
   rows.forEach((p) => {
-    const clave = obtenerClave(p) || 'Sin datos';
+    const clave = obtenerClave(p) || fallback;
     if (!grupos[clave]) grupos[clave] = { atenciones: 0, monto: 0 };
     grupos[clave].atenciones++;
     grupos[clave].monto += Number(p.monto) || 0;
@@ -86,8 +86,8 @@ export function generarReporte(page = 1) {
   const startIdx = (page - 1) * ITEMS_PER_PAGE;
   const paginated = rows.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
-  const desglosePorCentro = agruparPorClave(rows, (p) => p.institucion);
-  const desglosePorPrevision = agruparPorClave(rows, (p) => p.prevision);
+  const desglosePorCentro = agruparPorClave(rows, (p) => p.institucion, 'Sin centro');
+  const desglosePorPrevision = agruparPorClave(rows, (p) => p.prevision, 'Sin previsión registrada');
 
   let html = `<div class="reporte-resultado">
     <div class="reporte-encabezado">
@@ -111,7 +111,7 @@ export function generarReporte(page = 1) {
       <td>${escapeHtml(p.nombre)}</td>
       <td>${formatearRutParaMostrar(p.rut)}</td>
       <td>${escapeHtml(p.institucion || '-')}</td>
-      <td>${escapeHtml(p.prevision || '-')}</td>
+      <td>${escapeHtml(p.prevision || 'Sin previsión registrada')}</td>
       <td>${formatearMonto(p.monto)}</td>
     </tr>`;
   });
@@ -228,7 +228,7 @@ export function descargarReportePDF() {
     doc.text((p.nombre || '').substring(0, 16), COL.paciente, y);
     doc.text(formatearRutParaMostrar(p.rut || ''), COL.rut, y);
     doc.text((p.institucion || '').substring(0, 16), COL.centro, y);
-    doc.text((p.prevision || '-').substring(0, 14), COL.prevision, y);
+    doc.text((p.prevision || 'Sin previsión registrada').substring(0, 18), COL.prevision, y);
     doc.text(`$${Number(p.monto).toLocaleString('es-CL')}`, COL.monto, y);
     y += 6;
   }
@@ -265,7 +265,7 @@ export function descargarReportePDF() {
   };
 
   dibujarResumenGrupo('Resumen por Centro', agruparPorClave(currentReportRows, (p) => p.institucion));
-  dibujarResumenGrupo('Resumen por Previsión', agruparPorClave(currentReportRows, (p) => p.prevision));
+  dibujarResumenGrupo('Resumen por Previsión', agruparPorClave(currentReportRows, (p) => p.prevision, 'Sin previsión registrada'));
 
   if (y > 260) {
     doc.addPage();
@@ -349,7 +349,7 @@ export function descargarExcel() {
 
   const data = [['Fecha', 'Paciente', 'RUT', 'Centro', 'Previsión', 'Monto']];
   filtered.forEach((p) => {
-    data.push([p.fecha, p.nombre, p.rut, p.institucion || '', p.prevision || '', Number(p.monto) || 0]);
+    data.push([p.fecha, p.nombre, p.rut, p.institucion || '', p.prevision || 'Sin previsión registrada', Number(p.monto) || 0]);
   });
 
   const wb = XLSX.utils.book_new();

@@ -1331,9 +1331,16 @@ label {
   padding: 16px 18px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
   border-left: 4px solid #3b82f6;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
+.admin-stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.09); }
+.admin-stat-card:active { transform: translateY(0); }
+.admin-stat-card.stat-active { outline: 2px solid #3b82f6; outline-offset: -1px; }
 .admin-stat-card.stat-pro { border-left-color: #16a34a; }
 .admin-stat-card.stat-gratis { border-left-color: #94a3b8; }
+.admin-stat-card.stat-vencido { border-left-color: #dc2626; }
 .admin-stat-card.stat-vencer { border-left-color: #d97706; }
 .admin-stat-card .stat-num {
   font-size: 26px;
@@ -1410,7 +1417,7 @@ label {
 }
 .admin-plan-badge.plan-pro { background: #dcfce7; color: #166534; }
 .admin-plan-badge.plan-gratis { background: #f1f5f9; color: #475569; }
-.admin-plan-badge.plan-vencido { background: #fef3c7; color: #92400e; }
+.admin-plan-badge.plan-vencido { background: #fee2e2; color: #991b1b; }
 
 .admin-user-meta {
   display: flex;

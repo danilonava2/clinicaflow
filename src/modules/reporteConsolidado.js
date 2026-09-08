@@ -16,7 +16,7 @@ const CATEGORIAS = [
     label: 'Policlínico',
     columnaGrupo: 'Previsión',
     obtenerCentro: (p) => p.institucion || 'Sin centro',
-    obtenerClave: (p) => p.prevision || 'Sin previsión',
+    obtenerClave: (p) => p.prevision || 'Sin previsión registrada',
     obtenerMonto: (p) => Number(p.monto) || 0
   },
   {
@@ -25,7 +25,7 @@ const CATEGORIAS = [
     label: 'Turnos y Horas Extras',
     columnaGrupo: 'Tipo',
     obtenerCentro: (t) => t.centro || 'Sin centro',
-    obtenerClave: (t) => t.tipo || 'Sin tipo',
+    obtenerClave: (t) => t.tipo || 'Sin tipo registrado',
     obtenerMonto: (t) => Number(t.total) || 0
   },
   {
@@ -34,7 +34,7 @@ const CATEGORIAS = [
     label: 'Cirugías',
     columnaGrupo: 'Tipo',
     obtenerCentro: (c) => c.centro || 'Sin centro',
-    obtenerClave: (c) => c.tipo || 'Sin tipo',
+    obtenerClave: (c) => c.tipo || 'Sin tipo registrado',
     obtenerMonto: (c) => Number(c.monto) || 0
   }
 ];

@@ -123,10 +123,6 @@ export function registrarAtencion(event) {
     mostrarAviso('Selecciona un centro', 'advertencia');
     return;
   }
-  if (!nuevo.prevision) {
-    mostrarAviso('Selecciona una previsión', 'advertencia');
-    return;
-  }
   const previos = buscarRegistrosAnteriores(rut);
   if (previos.length > 0) {
     mostrarAdvertenciaDuplicado(rut, nuevo);

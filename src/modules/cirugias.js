@@ -156,7 +156,7 @@ function renderListaCirugiasDelDia() {
   let html = '<div class="previsiones-list" style="margin-bottom:14px;">';
   registros.forEach((c) => {
     html += `<div class="prevision-item">
-      <span>🔪 ${escapeHtml(c.centro)} — ${escapeHtml(c.tipo)} — ${escapeHtml(c.paciente)} — ${formatearMonto(c.monto)}</span>
+      <span>🔪 ${escapeHtml(c.centro)} — ${escapeHtml(c.tipo || '(sin tipo)')} — ${escapeHtml(c.paciente)} — ${formatearMonto(c.monto)}</span>
       <div>
         <button onclick="editarCirugia('${c.id}')" class="btn-edit" style="margin-right:5px;">✏️</button>
         <button onclick="eliminarCirugia('${c.id}')" class="btn-delete">🗑️</button>
@@ -224,10 +224,6 @@ export function agregarCirugia() {
 
   if (!centro) {
     mostrarAviso('Selecciona un centro', 'advertencia');
-    return;
-  }
-  if (!tipo) {
-    mostrarAviso('Selecciona un tipo de cirugía', 'advertencia');
     return;
   }
   if (!paciente) {
@@ -302,7 +298,9 @@ export function actualizarTiposCirugiaEdicion() {
   const tipoSelect = document.getElementById('editarCirugiaTipoSelect');
   const centro = state.centros.find((c) => c.nombre === centroNombre);
   const tipos = centro?.tiposCirugia || [];
-  tipoSelect.innerHTML = tipos.map((t) => `<option value="${escapeHtml(t.nombre)}">${escapeHtml(t.nombre)}</option>`).join('');
+  tipoSelect.innerHTML =
+    '<option value="">-- Sin tipo --</option>' +
+    tipos.map((t) => `<option value="${escapeHtml(t.nombre)}">${escapeHtml(t.nombre)}</option>`).join('');
 }
 
 export function autocompletarMontoCirugiaEdicion() {
@@ -422,7 +420,7 @@ export function generarInformeCirugias(page = 1) {
       <td>${escapeHtml(c.paciente)}</td>
       <td>${formatearRutParaMostrar(c.rut)}</td>
       <td>${escapeHtml(c.centro)}</td>
-      <td>${escapeHtml(c.tipo)}</td>
+      <td>${escapeHtml(c.tipo || 'Sin tipo registrado')}</td>
       <td>${formatearMonto(c.monto)}</td>
     </tr>`;
   });
@@ -539,7 +537,7 @@ export function descargarInformeCirugiasPDF() {
     doc.text((c.paciente || '').substring(0, 16), COL.paciente, y);
     doc.text(formatearRutParaMostrar(c.rut || ''), COL.rut, y);
     doc.text((c.centro || '').substring(0, 16), COL.centro, y);
-    doc.text((c.tipo || '').substring(0, 16), COL.tipo, y);
+    doc.text((c.tipo || 'Sin tipo registrado').substring(0, 20), COL.tipo, y);
     doc.text(`$${Number(c.monto).toLocaleString('es-CL')}`, COL.monto, y);
     y += 6;
   }
@@ -619,7 +617,7 @@ export function descargarInformeCirugiasExcel() {
 
   const data = [['Fecha', 'Paciente', 'RUT', 'Centro', 'Tipo', 'Monto']];
   filtered.forEach((c) => {
-    data.push([c.fecha, c.paciente, c.rut, c.centro, c.tipo, Number(c.monto) || 0]);
+    data.push([c.fecha, c.paciente, c.rut, c.centro, c.tipo || 'Sin tipo registrado', Number(c.monto) || 0]);
   });
 
   const wb = XLSX.utils.book_new();

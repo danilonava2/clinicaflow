@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, onSnapshot, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, collection } from 'firebase/firestore';
 import { firestoreDb } from './config.js';
 
 export async function guardarDatosUsuario(uid, { pacientes, centros, turnos, cirugias }) {
@@ -58,19 +58,30 @@ export function escucharDatosUsuario(uid, onCambio) {
 }
 
 // ==================== SOLO ADMINISTRADOR ====================
-export async function listarTodosLosUsuarios() {
-  const snapshot = await getDocs(collection(firestoreDb, 'usuarios'));
-  return snapshot.docs.map((d) => {
-    const data = d.data();
-    return {
-      uid: d.id,
-      email: data.email || '(sin correo registrado)',
-      plan: data.plan || 'gratis',
-      planVenceEl: data.planVenceEl || null,
-      totalRegistros: Array.isArray(data.pacientes) ? data.pacientes.length : 0,
-      totalCentros: Array.isArray(data.centros) ? data.centros.length : 0
-    };
-  });
+function mapearUsuario(docSnap) {
+  const data = docSnap.data();
+  return {
+    uid: docSnap.id,
+    email: data.email || '(sin correo registrado)',
+    plan: data.plan || 'gratis',
+    planVenceEl: data.planVenceEl || null,
+    totalRegistros: Array.isArray(data.pacientes) ? data.pacientes.length : 0,
+    totalCentros: Array.isArray(data.centros) ? data.centros.length : 0
+  };
+}
+
+// Se queda escuchando la coleccion completa de usuarios en tiempo real:
+// si se activa un plan desde otro dispositivo (u otra pestaña), la lista
+// se actualiza sola aca tambien, igual que la app principal sincroniza
+// los datos de un usuario. Devuelve una funcion para dejar de escuchar.
+export function escucharTodosLosUsuarios(onCambio) {
+  return onSnapshot(
+    collection(firestoreDb, 'usuarios'),
+    (snapshot) => onCambio(snapshot.docs.map(mapearUsuario)),
+    (error) => {
+      console.error('Error escuchando la lista de usuarios:', error);
+    }
+  );
 }
 
 // planVenceEl: fecha ISO (YYYY-MM-DD) o null para un plan Pro sin vencimiento.

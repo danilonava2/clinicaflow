@@ -25,10 +25,10 @@ function agruparPorMes(data) {
 
 // Agrupa por una clave y, si hay mas de MAX_SEGMENTOS grupos, junta el resto
 // en "Otros" (ver anti-patrones: pie/donut legible solo hasta ~6 segmentos).
-function agruparConOtros(data, obtenerClave) {
+function agruparConOtros(data, obtenerClave, fallback = 'Sin datos') {
   const totales = {};
   data.forEach((p) => {
-    const clave = obtenerClave(p) || 'Sin datos';
+    const clave = obtenerClave(p) || fallback;
     totales[clave] = (totales[clave] || 0) + (Number(p.monto) || 0);
   });
   const entradas = Object.entries(totales).sort((a, b) => b[1] - a[1]);
@@ -182,7 +182,7 @@ function renderGraficos(data) {
     ingresosCentroChart = crearDonut(ctxCentro, datosCentro);
   }
 
-  const datosPrevision = agruparConOtros(data, (p) => p.prevision);
+  const datosPrevision = agruparConOtros(data, (p) => p.prevision, 'Sin previsión registrada');
   const ctxPrevision = document.getElementById('ingresosPrevisionChart')?.getContext('2d');
   if (ctxPrevision) {
     if (ingresosPrevisionChart) ingresosPrevisionChart.destroy();

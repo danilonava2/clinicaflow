@@ -154,7 +154,7 @@ function renderListaTurnosDelDia() {
   let html = '<div class="previsiones-list" style="margin-bottom:14px;">';
   registros.forEach((t) => {
     html += `<div class="prevision-item">
-      <span>🏥 ${escapeHtml(t.centro)} — ${escapeHtml(t.tipo)} — ${t.horas}h — ${formatearMonto(t.total)}</span>
+      <span>🏥 ${escapeHtml(t.centro)} — ${escapeHtml(t.tipo || '(sin tipo)')} — ${t.horas}h — ${formatearMonto(t.total)}</span>
       <div>
         <button onclick="editarTurno('${t.id}')" class="btn-edit" style="margin-right:5px;">✏️</button>
         <button onclick="eliminarTurno('${t.id}')" class="btn-delete">🗑️</button>
@@ -231,10 +231,6 @@ export function agregarTurno() {
     mostrarAviso('Selecciona un centro', 'advertencia');
     return;
   }
-  if (!tipo) {
-    mostrarAviso('Selecciona un tipo de turno', 'advertencia');
-    return;
-  }
   if (!horas) {
     mostrarAviso('Ingresa las horas', 'advertencia');
     return;
@@ -298,7 +294,9 @@ export function actualizarTiposTurnoEdicion() {
   const tipoSelect = document.getElementById('editarTurnoTipoSelect');
   const centro = state.centros.find((c) => c.nombre === centroNombre);
   const tipos = centro?.tiposTurno || [];
-  tipoSelect.innerHTML = tipos.map((t) => `<option value="${escapeHtml(t.nombre)}">${escapeHtml(t.nombre)}</option>`).join('');
+  tipoSelect.innerHTML =
+    '<option value="">-- Sin tipo --</option>' +
+    tipos.map((t) => `<option value="${escapeHtml(t.nombre)}">${escapeHtml(t.nombre)}</option>`).join('');
 }
 
 export function autocompletarValorHoraEdicion() {
@@ -413,7 +411,7 @@ export function generarInformeTurnos(page = 1) {
     html += `<tr>
       <td>${formatearFecha(t.fecha)}</td>
       <td>${escapeHtml(t.centro)}</td>
-      <td>${escapeHtml(t.tipo)}</td>
+      <td>${escapeHtml(t.tipo || 'Sin tipo registrado')}</td>
       <td>${formatearMonto(t.valorHora)}</td>
       <td>${t.horas}</td>
       <td>${formatearMonto(t.total)}</td>
@@ -532,7 +530,7 @@ export function descargarInformeTurnosPDF() {
     doc.setFontSize(8);
     doc.text(t.fecha || '', COL.fecha, y);
     doc.text((t.centro || '').substring(0, 20), COL.centro, y);
-    doc.text((t.tipo || '').substring(0, 16), COL.tipo, y);
+    doc.text((t.tipo || 'Sin tipo registrado').substring(0, 20), COL.tipo, y);
     doc.text(`$${Number(t.valorHora).toLocaleString('es-CL')}`, COL.valorHora, y);
     doc.text(`${t.horas}`, COL.horas, y);
     doc.text(`$${Number(t.total).toLocaleString('es-CL')}`, COL.total, y);
@@ -614,7 +612,7 @@ export function descargarInformeTurnosExcel() {
 
   const data = [['Fecha', 'Centro', 'Tipo', 'Valor por hora', 'Horas', 'Total']];
   filtered.forEach((t) => {
-    data.push([t.fecha, t.centro, t.tipo, Number(t.valorHora) || 0, Number(t.horas) || 0, Number(t.total) || 0]);
+    data.push([t.fecha, t.centro, t.tipo || 'Sin tipo registrado', Number(t.valorHora) || 0, Number(t.horas) || 0, Number(t.total) || 0]);
   });
 
   const wb = XLSX.utils.book_new();
