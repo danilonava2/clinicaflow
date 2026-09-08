@@ -28,8 +28,9 @@
 <div id="loginScreen" class="login-container">
   <div class="login-card">
     <div style="text-align:center; margin-bottom:20px;">
-      <img src="logo-clinicaflow.png" alt="ClinicaFlow" style="max-width:180px;">
-      <h2 style="color:#1e2937; margin-top:10px;">🔐 Panel de Administrador</h2>
+      <img src="img/logo-transparente.png" alt="ClinicaFlow" style="max-width:180px;">
+      <h2 style="color:#1e2937; margin-top:14px;">🔐 Panel de Administrador</h2>
+      <p style="color:#64748b; font-size:13px; margin-top:4px;">Acceso exclusivo para el equipo de ClinicaFlow</p>
     </div>
     <div class="form-group">
       <label>📧 Correo</label>
@@ -49,14 +50,26 @@
   <button onclick="adminLogout()" class="btn-secondary">Cerrar sesión</button>
 </div>
 
-<div id="panelAdmin" style="display:none; max-width:1000px; margin:40px auto; padding:0 20px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-    <h2>👑 Usuarios de ClinicaFlow</h2>
+<div id="panelAdmin" style="display:none;" class="admin-page">
+  <header class="admin-header">
+    <div class="admin-header-brand">
+      <img src="img/icon-transparente.png" alt="ClinicaFlow">
+      <div>
+        <h1>Panel de Administrador</h1>
+        <p>ClinicaFlow · Gestión de usuarios y planes</p>
+      </div>
+    </div>
     <button onclick="adminLogout()" class="btn-secondary">🚪 Cerrar sesión</button>
+  </header>
+
+  <div class="admin-stats-grid" id="adminStatsGrid"></div>
+
+  <div class="admin-toolbar">
+    <input type="text" id="adminBuscador" class="admin-search-input" placeholder="🔍 Buscar por correo...">
+    <span class="admin-count-badge" id="adminContadorResultados"></span>
   </div>
-  <div class="card">
-    <div id="listaUsuarios">Cargando...</div>
-  </div>
+
+  <div id="listaUsuarios">Cargando...</div>
 </div>
 
 <script type="module" src="./src/admin.js"></script>

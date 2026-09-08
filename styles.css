@@ -1,8 +1,9 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-body { 
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-  background: #f8fafc; 
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8fafc;
+  overflow-x: hidden;
 }
 
 /* ==================== PANTALLA DE LOGIN ==================== */
@@ -269,13 +270,6 @@ body {
 
 .welcome-logo {
   margin-bottom: 20px;
-}
-
-/* El PNG del logo tiene un fondo plano gris muy claro (no transparente);
-   multiply lo funde con el fondo blanco de la tarjeta para que no se note
-   como un rectangulo. */
-.welcome-logo img {
-  mix-blend-mode: multiply;
 }
 
 .welcome-card h2 {
@@ -883,6 +877,51 @@ label {
 .reporte-desglose-card .tabla-resultados th,
 .reporte-desglose-card .tabla-resultados td { padding: 6px 8px; }
 
+/* CUADROS DEL INFORME CONSOLIDADO */
+.consolidado-box h4 { text-align: center; }
+.consolidado-cantidad {
+  text-align: center;
+  color: #64748b;
+  font-size: 12px;
+  margin: 0 0 2px;
+}
+.consolidado-bruto {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e2937;
+  margin: 0 0 12px;
+}
+.consolidado-descuento-inputs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.consolidado-descuento-inputs > div { flex: 1; min-width: 0; }
+.consolidado-descuento-inputs label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 3px;
+}
+.consolidado-descuento-inputs input {
+  width: 100%;
+  padding: 7px 8px;
+  font-size: 13px;
+}
+.consolidado-box .descuento-linea { padding: 5px 0; font-size: 12.5px; }
+.consolidado-final {
+  margin-top: 6px;
+  padding: 10px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: #16a34a;
+  text-align: center;
+}
+
 /* CALCULADORA DE DESCUENTOS */
 .descuento-linea {
   display: flex;
@@ -1204,8 +1243,12 @@ label {
 }
 :root[data-theme="dark"] .btn-chip:hover { background: #234876; }
 
+:root[data-theme="dark"] .consolidado-bruto { color: #f1f5f9; }
+:root[data-theme="dark"] .consolidado-cantidad { color: #94a3b8; }
+
 :root[data-theme="dark"] .reporte-total,
-:root[data-theme="dark"] .descuento-final {
+:root[data-theme="dark"] .descuento-final,
+:root[data-theme="dark"] .consolidado-final {
   background: linear-gradient(135deg, #14291d, #163821);
   border-color: #1f4a2c;
 }
@@ -1218,4 +1261,191 @@ label {
 :root[data-theme="dark"] .aviso-modal-content,
 :root[data-theme="dark"] .modal-content {
   box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+}
+
+/* ==================== PANEL DE ADMINISTRADOR ==================== */
+.admin-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: #1e2937;
+  border-radius: 16px;
+  padding: 20px 26px;
+  margin-bottom: 22px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+}
+.admin-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.admin-header-brand img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+.admin-header-brand h1 {
+  color: white;
+  font-size: 19px;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.admin-header-brand p {
+  color: #94a3b8;
+  font-size: 12.5px;
+  margin: 2px 0 0;
+}
+.admin-header .btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 18px;
+  font-size: 14px;
+}
+.admin-header .btn-secondary:hover { background: rgba(255, 255, 255, 0.18); }
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.admin-stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #3b82f6;
+}
+.admin-stat-card.stat-pro { border-left-color: #16a34a; }
+.admin-stat-card.stat-gratis { border-left-color: #94a3b8; }
+.admin-stat-card.stat-vencer { border-left-color: #d97706; }
+.admin-stat-card .stat-num {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e2937;
+  line-height: 1.1;
+}
+.admin-stat-card .stat-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.admin-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+}
+.admin-search-input:focus { outline: 2px solid #93c5fd; border-color: #3b82f6; }
+.admin-count-badge {
+  font-size: 12.5px;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.admin-user-card {
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.admin-user-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-user-email {
+  font-weight: 600;
+  color: #1e2937;
+  font-size: 14px;
+  word-break: break-all;
+}
+.admin-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.admin-plan-badge.plan-pro { background: #dcfce7; color: #166534; }
+.admin-plan-badge.plan-gratis { background: #f1f5f9; color: #475569; }
+.admin-plan-badge.plan-vencido { background: #fef3c7; color: #92400e; }
+
+.admin-user-meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: #64748b;
+  border-top: 1px dashed #e2e8f0;
+  border-bottom: 1px dashed #e2e8f0;
+  padding: 10px 0;
+}
+
+.admin-user-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-user-actions button {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13.5px;
+}
+.admin-btn-prueba {
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.admin-btn-prueba:hover { filter: brightness(1.08); }
+.admin-btn-prueba:active { transform: scale(0.96); }
+
+.admin-empty {
+  text-align: center;
+  padding: 50px 20px;
+  color: #94a3b8;
+}
+
+@media (max-width: 480px) {
+  .admin-header { padding: 16px 18px; }
+  .admin-header-brand h1 { font-size: 16px; }
+  .admin-header .btn-secondary { padding: 8px 14px; font-size: 13px; }
+  .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }

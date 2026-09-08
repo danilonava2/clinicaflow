@@ -1,4 +1,4 @@
-const CACHE_NAME = 'clinicaflow-shell-v6';
+const CACHE_NAME = 'clinicaflow-shell-v7';
 
 const APP_SHELL = [
   './',
@@ -31,6 +31,7 @@ const APP_SHELL = [
   './src/modules/backup.js',
   './src/modules/turnos.js',
   './src/modules/cirugias.js',
+  './src/modules/reporteConsolidado.js',
   './src/utils/rut.js',
   './src/utils/format.js',
   './src/utils/download.js',

@@ -175,7 +175,7 @@
       <div class="welcome-container">
         <div class="welcome-card">
           <div class="welcome-logo">
-            <img src="logo-clinicaflow.png" alt="ClinicaFlow" style="max-width: 180px;">
+            <img src="img/logo-transparente.png" alt="ClinicaFlow" style="max-width: 180px;">
           </div>
           <h2>Bienvenido a ClinicaFlow</h2>
           <p class="welcome-subtitle">Tu control de ingresos profesional</p>
@@ -331,6 +331,7 @@
         <button type="button" onclick="cambiarPestanaReportes('policlinico')" class="reporte-tab-btn active" id="tabPoliclinico">📋 Policlínico</button>
         <button type="button" onclick="cambiarPestanaReportes('turnos')" class="reporte-tab-btn" id="tabTurnos">🕐 Turnos / Horas Extras ⭐</button>
         <button type="button" onclick="cambiarPestanaReportes('cirugias')" class="reporte-tab-btn" id="tabCirugias">🔪 Cirugías ⭐</button>
+        <button type="button" onclick="cambiarPestanaReportes('consolidado')" class="reporte-tab-btn" id="tabConsolidado">📊 Consolidado ⭐</button>
       </div>
 
       <div id="reportePoliclinicoTab">
@@ -401,6 +402,26 @@
           </div>
           <div id="informeCirugiasContainer"></div>
           <div id="informeCirugiasPaginacion" class="pagination-container"></div>
+        </div>
+      </div>
+
+      <div id="reporteConsolidadoTab" style="display:none;">
+        <div class="card" id="consolidadoReporteProGate" style="display:none;">
+          <div class="reporte-vacio">🔒 Esta sección es exclusiva del plan Pro. Actualiza tu plan para ver el informe consolidado.</div>
+        </div>
+        <div class="card" id="consolidadoReporteContenido" style="display:none;">
+          <div class="filtros-rapidos">
+            <button type="button" onclick="aplicarRangoConsolidado('hoy')" class="btn-chip">Hoy</button>
+            <button type="button" onclick="aplicarRangoConsolidado('semana')" class="btn-chip">Esta semana</button>
+            <button type="button" onclick="aplicarRangoConsolidado('mes')" class="btn-chip">Este mes</button>
+          </div>
+          <div class="advanced-filters">
+            <div><label>📅 Desde</label><input type="date" id="consolidadoFechaInicio"></div>
+            <div><label>📅 Hasta</label><input type="date" id="consolidadoFechaFin"></div>
+            <div><label>🏥 Centro</label><select id="consolidadoFiltroCentro"><option value="">Todos los centros</option></select></div>
+            <button onclick="generarInformeConsolidado()" class="btn-primary">📄 Generar</button>
+          </div>
+          <div id="consolidadoResumenContainer"></div>
         </div>
       </div>
     </div>

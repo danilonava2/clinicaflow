@@ -101,6 +101,13 @@ import {
   descargarInformeCirugiasExcel,
   actualizarDescuentoInformeCirugias
 } from './modules/cirugias.js';
+import {
+  actualizarSelectFiltroConsolidado,
+  generarInformeConsolidado,
+  actualizarDescuentoConsolidado,
+  descargarInformeConsolidadoPDF,
+  descargarInformeConsolidadoExcel
+} from './modules/reporteConsolidado.js';
 
 function mostrarPantallaApp() {
   document.getElementById('loginScreen').style.display = 'none';
@@ -187,13 +194,23 @@ function aplicarRangoCirugias(tipo) {
   generarInformeCirugias();
 }
 
+function aplicarRangoConsolidado(tipo) {
+  const rango = calcularRangoRapido(tipo);
+  if (!rango) return;
+  document.getElementById('consolidadoFechaInicio').value = rango.inicio;
+  document.getElementById('consolidadoFechaFin').value = rango.fin;
+  generarInformeConsolidado();
+}
+
 function cambiarPestanaReportes(tab) {
   document.getElementById('tabPoliclinico').classList.toggle('active', tab === 'policlinico');
   document.getElementById('tabTurnos').classList.toggle('active', tab === 'turnos');
   document.getElementById('tabCirugias').classList.toggle('active', tab === 'cirugias');
+  document.getElementById('tabConsolidado').classList.toggle('active', tab === 'consolidado');
   document.getElementById('reportePoliclinicoTab').style.display = tab === 'policlinico' ? 'block' : 'none';
   document.getElementById('reporteTurnosTab').style.display = tab === 'turnos' ? 'block' : 'none';
   document.getElementById('reporteCirugiasTab').style.display = tab === 'cirugias' ? 'block' : 'none';
+  document.getElementById('reporteConsolidadoTab').style.display = tab === 'consolidado' ? 'block' : 'none';
 
   if (tab === 'turnos') {
     const gate = document.getElementById('turnosReporteProGate');
@@ -210,6 +227,18 @@ function cambiarPestanaReportes(tab) {
   if (tab === 'cirugias') {
     const gate = document.getElementById('cirugiasReporteProGate');
     const contenido = document.getElementById('cirugiasReporteContenido');
+    if (esPlanPro()) {
+      gate.style.display = 'none';
+      contenido.style.display = 'block';
+    } else {
+      gate.style.display = 'block';
+      contenido.style.display = 'none';
+    }
+  }
+
+  if (tab === 'consolidado') {
+    const gate = document.getElementById('consolidadoReporteProGate');
+    const contenido = document.getElementById('consolidadoReporteContenido');
     if (esPlanPro()) {
       gate.style.display = 'none';
       contenido.style.display = 'block';
@@ -264,6 +293,7 @@ async function onSesionIniciada(user) {
     actualizarSelectPrevisionDashboard();
     actualizarSelectFiltrosTurnos();
     actualizarSelectFiltrosCirugias();
+    actualizarSelectFiltroConsolidado();
     migrarCentrosDesdePacientes();
     actualizarContador();
     actualizarInfoPlan();
@@ -472,7 +502,12 @@ Object.assign(window, {
   descargarInformeCirugiasPDF,
   descargarInformeCirugiasExcel,
   actualizarDescuentoInformeCirugias,
-  aplicarRangoCirugias
+  aplicarRangoCirugias,
+  generarInformeConsolidado,
+  actualizarDescuentoConsolidado,
+  descargarInformeConsolidadoPDF,
+  descargarInformeConsolidadoExcel,
+  aplicarRangoConsolidado
 });
 
 document.addEventListener('DOMContentLoaded', () => {
