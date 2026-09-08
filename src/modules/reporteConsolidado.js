@@ -1,26 +1,51 @@
 import { state } from '../store.js';
-import { formatearMonto } from '../utils/format.js';
+import { formatearMonto, formatearFecha, escapeHtml } from '../utils/format.js';
 import { descargarArchivo } from '../utils/download.js';
 import { mostrarAviso } from '../ui/notificaciones.js';
 
 const { jsPDF } = window.jspdf;
 const XLSX = window.XLSX;
 
-// Cada categoria guarda: id del bloque en el DOM, label para mostrar,
-// y como leer sus filas/monto desde el state ya filtrado.
+// Cada categoria: prefijo de id, label, nombre de la columna de
+// agrupacion (previsión para Policlínico, tipo para Turnos/Cirugías),
+// y como leer centro/clave/monto de cada registro.
 const CATEGORIAS = [
-  { id: 'consolidadoPoli', icono: '📋', label: 'Policlínico' },
-  { id: 'consolidadoTurnos', icono: '🕐', label: 'Turnos y Horas Extras' },
-  { id: 'consolidadoCirugias', icono: '🔪', label: 'Cirugías' }
+  {
+    id: 'consolidadoPoli',
+    icono: '📋',
+    label: 'Policlínico',
+    columnaGrupo: 'Previsión',
+    obtenerCentro: (p) => p.institucion || 'Sin centro',
+    obtenerClave: (p) => p.prevision || 'Sin previsión',
+    obtenerMonto: (p) => Number(p.monto) || 0
+  },
+  {
+    id: 'consolidadoTurnos',
+    icono: '🕐',
+    label: 'Turnos y Horas Extras',
+    columnaGrupo: 'Tipo',
+    obtenerCentro: (t) => t.centro || 'Sin centro',
+    obtenerClave: (t) => t.tipo || 'Sin tipo',
+    obtenerMonto: (t) => Number(t.total) || 0
+  },
+  {
+    id: 'consolidadoCirugias',
+    icono: '🔪',
+    label: 'Cirugías',
+    columnaGrupo: 'Tipo',
+    obtenerCentro: (c) => c.centro || 'Sin centro',
+    obtenerClave: (c) => c.tipo || 'Sin tipo',
+    obtenerMonto: (c) => Number(c.monto) || 0
+  }
 ];
 
-let filasPorCategoria = { consolidadoPoli: [], consolidadoTurnos: [], consolidadoCirugias: [] };
-let totalBrutoPorCategoria = { consolidadoPoli: 0, consolidadoTurnos: 0, consolidadoCirugias: 0 };
-let descuentosGuardados = {
-  consolidadoPoli: { pct1: '', pct2: '' },
-  consolidadoTurnos: { pct1: '', pct2: '' },
-  consolidadoCirugias: { pct1: '', pct2: '' }
-};
+// Cada "caja" es una combinacion Categoria + Centro (porque cada centro
+// puede tener un porcentaje de descuento distinto). Se recalculan
+// completas cada vez que se presiona "Generar".
+let boxesActuales = [];
+// Los porcentajes escritos se recuerdan por boxId mientras dura la
+// sesion, para no perderlos si se vuelve a generar con los mismos filtros.
+let descuentosGuardados = {};
 
 function calcularMontosDescuento(total, pct1, pct2) {
   const monto1 = total * (pct1 / 100);
@@ -28,6 +53,19 @@ function calcularMontosDescuento(total, pct1, pct2) {
   const monto2 = subtotal1 * (pct2 / 100);
   const totalFinal = subtotal1 - monto2;
   return { monto1, subtotal1, monto2, totalFinal };
+}
+
+// Agrupa las filas de una caja por Previsión/Tipo, sumando cantidad y
+// monto (el centro ya esta fijo dentro de la caja, no hace falta repetirlo).
+function agruparPorClave(box) {
+  const grupos = {};
+  box.filas.forEach((item) => {
+    const clave = box.cat.obtenerClave(item);
+    if (!grupos[clave]) grupos[clave] = { clave, cantidad: 0, monto: 0 };
+    grupos[clave].cantidad += 1;
+    grupos[clave].monto += box.cat.obtenerMonto(item);
+  });
+  return Object.values(grupos).sort((a, b) => a.clave.localeCompare(b.clave));
 }
 
 // ==================== FILTRO DE CENTRO COMPARTIDO ====================
@@ -61,46 +99,80 @@ function pasaFecha(fechaStr, start, end) {
   return f >= start && f <= end;
 }
 
+// Texto legible del rango de fechas (y centro, si esta filtrado) para
+// dejarlo escrito en el encabezado del informe final.
+function descripcionPeriodo() {
+  const inicio = document.getElementById('consolidadoFechaInicio')?.value;
+  const fin = document.getElementById('consolidadoFechaFin')?.value;
+  const centro = document.getElementById('consolidadoFiltroCentro')?.value;
+
+  let periodo;
+  if (inicio && fin) periodo = `${formatearFecha(inicio)} al ${formatearFecha(fin)}`;
+  else if (inicio) periodo = `Desde ${formatearFecha(inicio)}`;
+  else if (fin) periodo = `Hasta ${formatearFecha(fin)}`;
+  else periodo = 'Todo el historial';
+
+  return centro ? `${periodo} · Centro: ${centro}` : periodo;
+}
+
 // ==================== GENERAR RESUMEN ====================
 export function generarInformeConsolidado() {
   const { centro, start, end } = obtenerFiltros();
 
-  filasPorCategoria.consolidadoPoli = state.pacientes.filter(
-    (p) => pasaFecha(p.fecha, start, end) && (!centro || p.institucion === centro)
-  );
-  filasPorCategoria.consolidadoTurnos = state.turnos.filter(
-    (t) => pasaFecha(t.fecha, start, end) && (!centro || t.centro === centro)
-  );
-  filasPorCategoria.consolidadoCirugias = state.cirugias.filter(
-    (c) => pasaFecha(c.fecha, start, end) && (!centro || c.centro === centro)
-  );
+  const filasPorCategoriaId = {
+    consolidadoPoli: state.pacientes.filter(
+      (p) => pasaFecha(p.fecha, start, end) && (!centro || p.institucion === centro)
+    ),
+    consolidadoTurnos: state.turnos.filter(
+      (t) => pasaFecha(t.fecha, start, end) && (!centro || t.centro === centro)
+    ),
+    consolidadoCirugias: state.cirugias.filter(
+      (c) => pasaFecha(c.fecha, start, end) && (!centro || c.centro === centro)
+    )
+  };
 
-  totalBrutoPorCategoria.consolidadoPoli = filasPorCategoria.consolidadoPoli.reduce((s, p) => s + (Number(p.monto) || 0), 0);
-  totalBrutoPorCategoria.consolidadoTurnos = filasPorCategoria.consolidadoTurnos.reduce((s, t) => s + (Number(t.total) || 0), 0);
-  totalBrutoPorCategoria.consolidadoCirugias = filasPorCategoria.consolidadoCirugias.reduce((s, c) => s + (Number(c.monto) || 0), 0);
+  boxesActuales = [];
+  CATEGORIAS.forEach((cat) => {
+    const filas = filasPorCategoriaId[cat.id];
+    const centros = Array.from(new Set(filas.map(cat.obtenerCentro))).sort((a, b) => a.localeCompare(b));
+    centros.forEach((centroNombre, idx) => {
+      const filasCentro = filas.filter((item) => cat.obtenerCentro(item) === centroNombre);
+      const totalBruto = filasCentro.reduce((s, item) => s + cat.obtenerMonto(item), 0);
+      const boxId = `${cat.id}_${idx}`;
+      if (!descuentosGuardados[boxId]) descuentosGuardados[boxId] = { pct1: '', pct2: '' };
+      boxesActuales.push({
+        boxId,
+        cat,
+        centro: centroNombre,
+        filas: filasCentro,
+        cantidad: filasCentro.length,
+        totalBruto
+      });
+    });
+  });
 
   renderResumen();
 }
 
-function boxHTML({ id, icono, label }) {
-  const cantidad = filasPorCategoria[id].length;
-  const bruto = totalBrutoPorCategoria[id];
-  const { pct1, pct2 } = descuentosGuardados[id];
+function boxHTML(box) {
+  const { boxId, cat, centro, cantidad, totalBruto } = box;
+  const { pct1, pct2 } = descuentosGuardados[boxId];
   return `<div class="reporte-desglose-card consolidado-box">
-    <h4>${icono} ${label}</h4>
+    <h4>${cat.icono} ${cat.label}</h4>
+    <p class="consolidado-centro">🏥 ${escapeHtml(centro)}</p>
     <p class="consolidado-cantidad">${cantidad} registro${cantidad === 1 ? '' : 's'}</p>
-    <p class="consolidado-bruto">${formatearMonto(bruto)}</p>
+    <p class="consolidado-bruto">${formatearMonto(totalBruto)}</p>
     <div class="consolidado-descuento-inputs">
       <div>
         <label>Desc. 1 (%)</label>
-        <input type="number" id="${id}Pct1" min="0" max="100" step="0.01" placeholder="0" value="${pct1}" oninput="actualizarDescuentoConsolidado('${id}')">
+        <input type="number" id="${boxId}Pct1" min="0" max="100" step="0.01" placeholder="0" value="${pct1}" oninput="actualizarDescuentoConsolidado('${boxId}')">
       </div>
       <div>
         <label>Desc. 2 (%)</label>
-        <input type="number" id="${id}Pct2" min="0" max="100" step="0.01" placeholder="0" value="${pct2}" oninput="actualizarDescuentoConsolidado('${id}')">
+        <input type="number" id="${boxId}Pct2" min="0" max="100" step="0.01" placeholder="0" value="${pct2}" oninput="actualizarDescuentoConsolidado('${boxId}')">
       </div>
     </div>
-    <div id="${id}Resultado"></div>
+    <div id="${boxId}Resultado"></div>
   </div>`;
 }
 
@@ -108,15 +180,14 @@ function renderResumen() {
   const container = document.getElementById('consolidadoResumenContainer');
   if (!container) return;
 
-  const hayDatos = CATEGORIAS.some((cat) => filasPorCategoria[cat.id].length > 0);
-  if (!hayDatos) {
+  if (boxesActuales.length === 0) {
     container.innerHTML = '<div class="reporte-vacio">📭 No se encontraron registros con estos filtros.</div>';
     return;
   }
 
   container.innerHTML = `
     <div class="reporte-desglose-grid">
-      ${CATEGORIAS.map(boxHTML).join('')}
+      ${boxesActuales.map(boxHTML).join('')}
     </div>
     <div class="reporte-total">
       <div class="reporte-total-linea">
@@ -130,22 +201,23 @@ function renderResumen() {
     </div>
   `;
 
-  CATEGORIAS.forEach((cat) => actualizarDescuentoConsolidado(cat.id));
+  boxesActuales.forEach((box) => actualizarDescuentoConsolidado(box.boxId));
 }
 
-// ==================== DESCUENTOS POR CATEGORIA ====================
-export function actualizarDescuentoConsolidado(id) {
-  const pct1Input = document.getElementById(`${id}Pct1`);
-  const pct2Input = document.getElementById(`${id}Pct2`);
-  const resultado = document.getElementById(`${id}Resultado`);
-  if (!pct1Input || !pct2Input || !resultado) return;
+// ==================== DESCUENTOS POR CAJA (Categoria + Centro) ====================
+export function actualizarDescuentoConsolidado(boxId) {
+  const box = boxesActuales.find((b) => b.boxId === boxId);
+  const pct1Input = document.getElementById(`${boxId}Pct1`);
+  const pct2Input = document.getElementById(`${boxId}Pct2`);
+  const resultado = document.getElementById(`${boxId}Resultado`);
+  if (!box || !pct1Input || !pct2Input || !resultado) return;
 
-  descuentosGuardados[id].pct1 = pct1Input.value;
-  descuentosGuardados[id].pct2 = pct2Input.value;
+  descuentosGuardados[boxId].pct1 = pct1Input.value;
+  descuentosGuardados[boxId].pct2 = pct2Input.value;
 
   const pct1 = parseFloat(pct1Input.value) || 0;
   const pct2 = parseFloat(pct2Input.value) || 0;
-  const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(totalBrutoPorCategoria[id], pct1, pct2);
+  const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(box.totalBruto, pct1, pct2);
 
   if (pct1 <= 0 && pct2 <= 0) {
     resultado.innerHTML = `<div class="consolidado-final">${formatearMonto(totalFinal)}</div>`;
@@ -161,51 +233,22 @@ export function actualizarDescuentoConsolidado(id) {
   actualizarTotalGeneral();
 }
 
-function totalFinalDe(id) {
-  const pct1 = parseFloat(document.getElementById(`${id}Pct1`)?.value) || 0;
-  const pct2 = parseFloat(document.getElementById(`${id}Pct2`)?.value) || 0;
-  return calcularMontosDescuento(totalBrutoPorCategoria[id], pct1, pct2).totalFinal;
+function totalFinalDeBox(box) {
+  const pct1 = parseFloat(document.getElementById(`${box.boxId}Pct1`)?.value) || 0;
+  const pct2 = parseFloat(document.getElementById(`${box.boxId}Pct2`)?.value) || 0;
+  return calcularMontosDescuento(box.totalBruto, pct1, pct2).totalFinal;
 }
 
 function actualizarTotalGeneral() {
   const el = document.getElementById('consolidadoTotalGeneralMonto');
   if (!el) return;
-  const total = CATEGORIAS.reduce((s, cat) => s + totalFinalDe(cat.id), 0);
+  const total = boxesActuales.reduce((s, box) => s + totalFinalDeBox(box), 0);
   el.innerText = formatearMonto(total);
 }
 
 // ==================== INFORME FINAL (PDF / EXCEL) ====================
-function filasCombinadas() {
-  const filas = [
-    ...filasPorCategoria.consolidadoPoli.map((p) => ({
-      fecha: p.fecha,
-      categoria: 'Policlínico',
-      tipo: p.prevision || '-',
-      cantidad: 1,
-      monto: Number(p.monto) || 0
-    })),
-    ...filasPorCategoria.consolidadoTurnos.map((t) => ({
-      fecha: t.fecha,
-      categoria: 'Turno',
-      tipo: t.tipo || '-',
-      cantidad: Number(t.horas) || 0,
-      monto: Number(t.total) || 0
-    })),
-    ...filasPorCategoria.consolidadoCirugias.map((c) => ({
-      fecha: c.fecha,
-      categoria: 'Cirugía',
-      tipo: c.tipo || '-',
-      cantidad: 1,
-      monto: Number(c.monto) || 0
-    }))
-  ];
-  filas.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
-  return filas;
-}
-
 export function descargarInformeConsolidadoPDF() {
-  const filas = filasCombinadas();
-  if (filas.length === 0) {
+  if (boxesActuales.length === 0) {
     mostrarAviso('No hay registros que coincidan con los filtros.', 'advertencia');
     return;
   }
@@ -242,79 +285,83 @@ export function descargarInformeConsolidadoPDF() {
   doc.setFontSize(9);
   doc.setTextColor(100, 116, 139);
   doc.text(`Generado: ${new Date().toLocaleDateString('es-CL')} ${new Date().toLocaleTimeString('es-CL')}`, 14, y);
+  y += 5;
   if (state.currentUser?.email) {
-    doc.text(`Usuario: ${state.currentUser.email}`, 14, y + 5);
-    y += 14;
-  } else {
-    y += 10;
+    doc.text(`Usuario: ${state.currentUser.email}`, 14, y);
+    y += 5;
   }
 
-  const COL = { fecha: 16, categoria: 42, tipo: 76, cantidad: 145, monto: 168 };
-
-  const dibujarCabecera = () => {
-    doc.setFillColor(59, 130, 246);
-    doc.rect(14, y, 182, 7, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.text('Fecha', COL.fecha, y + 5);
-    doc.text('Categoría', COL.categoria, y + 5);
-    doc.text('Tipo de prestación', COL.tipo, y + 5);
-    doc.text('Cant.', COL.cantidad, y + 5);
-    doc.text('Monto', COL.monto, y + 5);
-    y += 10;
-    doc.setTextColor(0, 0, 0);
-  };
-
-  dibujarCabecera();
-
-  filas.forEach((f) => {
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-      dibujarCabecera();
-    }
-    doc.setFontSize(8);
-    doc.text(f.fecha || '', COL.fecha, y);
-    doc.text(f.categoria, COL.categoria, y);
-    doc.text((f.tipo || '').substring(0, 24), COL.tipo, y);
-    doc.text(`${f.cantidad}`, COL.cantidad, y);
-    doc.text(`$${f.monto.toLocaleString('es-CL')}`, COL.monto, y);
-    y += 6;
-  });
-
-  y += 6;
-  doc.setLineWidth(0.3);
-  doc.line(14, y, 196, y);
-  y += 10;
-
-  if (y > 240) {
-    doc.addPage();
-    y = 20;
-  }
-
-  doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
   doc.setTextColor(30, 41, 59);
-  doc.text('Desglose por Categoría', 14, y);
-  y += 8;
+  doc.text(`Período: ${descripcionPeriodo()}`, 14, y);
+  doc.setFont(undefined, 'normal');
+  y += 10;
 
   let totalGeneral = 0;
-  CATEGORIAS.forEach((cat) => {
+  let categoriaAnterior = null;
+
+  boxesActuales.forEach((box) => {
+    const grupos = agruparPorClave(box);
+
+    if (y > 245) {
+      doc.addPage();
+      y = 20;
+    }
+
+    if (box.cat.id !== categoriaAnterior) {
+      doc.setFontSize(13);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(59, 130, 246);
+      doc.text(box.cat.label, 14, y);
+      y += 7;
+      categoriaAnterior = box.cat.id;
+    }
+
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(30, 41, 59);
+    doc.text(box.centro, 16, y);
+    y += 6;
+
+    const COL = { clave: 20, cantidad: 150, monto: 168 };
+    const dibujarCabeceraTabla = () => {
+      doc.setFillColor(226, 232, 240);
+      doc.rect(14, y, 182, 6, 'F');
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(8);
+      doc.text(box.cat.columnaGrupo, COL.clave, y + 4.5);
+      doc.text('Cant.', COL.cantidad, y + 4.5);
+      doc.text('Monto', COL.monto, y + 4.5);
+      y += 9;
+      doc.setTextColor(0, 0, 0);
+    };
+
+    dibujarCabeceraTabla();
+
+    grupos.forEach((g) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+        dibujarCabeceraTabla();
+      }
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'normal');
+      doc.text(g.clave.substring(0, 40), COL.clave, y);
+      doc.text(`${g.cantidad}`, COL.cantidad, y);
+      doc.text(`$${g.monto.toLocaleString('es-CL')}`, COL.monto, y);
+      y += 5.5;
+    });
+
+    y += 3;
     if (y > 260) {
       doc.addPage();
       y = 20;
     }
-    const pct1 = parseFloat(document.getElementById(`${cat.id}Pct1`)?.value) || 0;
-    const pct2 = parseFloat(document.getElementById(`${cat.id}Pct2`)?.value) || 0;
-    const totalBruto = totalBrutoPorCategoria[cat.id];
-    const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(totalBruto, pct1, pct2);
-    totalGeneral += totalFinal;
 
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(30, 41, 59);
-    doc.text(cat.label, 14, y);
-    y += 6;
+    const pct1 = parseFloat(document.getElementById(`${box.boxId}Pct1`)?.value) || 0;
+    const pct2 = parseFloat(document.getElementById(`${box.boxId}Pct2`)?.value) || 0;
+    const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(box.totalBruto, pct1, pct2);
+    totalGeneral += totalFinal;
 
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
@@ -324,7 +371,7 @@ export function descargarInformeConsolidadoPDF() {
       doc.text(valor, 150, y);
       y += 5.5;
     };
-    linea('Total bruto', `$${totalBruto.toLocaleString('es-CL')}`);
+    linea('Total bruto', `$${box.totalBruto.toLocaleString('es-CL')}`);
     if (pct1 > 0 || pct2 > 0) {
       linea(`Descuento 1 (${pct1}%)`, `-$${monto1.toLocaleString('es-CL')}`);
       linea('Subtotal', `$${subtotal1.toLocaleString('es-CL')}`);
@@ -333,7 +380,7 @@ export function descargarInformeConsolidadoPDF() {
     doc.setFont(undefined, 'bold');
     doc.setTextColor(22, 163, 74);
     linea('Total final (neto)', `$${totalFinal.toLocaleString('es-CL')}`);
-    y += 4;
+    y += 7;
   });
 
   y += 2;
@@ -364,32 +411,44 @@ export function descargarInformeConsolidadoPDF() {
 }
 
 export function descargarInformeConsolidadoExcel() {
-  const filas = filasCombinadas();
-  if (filas.length === 0) {
+  if (boxesActuales.length === 0) {
     mostrarAviso('No hay registros que coincidan con los filtros.', 'advertencia');
     return;
   }
 
-  const data = [['Fecha', 'Categoría', 'Tipo de prestación', 'Cantidad', 'Monto']];
-  filas.forEach((f) => {
-    data.push([f.fecha, f.categoria, f.tipo, f.cantidad, f.monto]);
-  });
-
-  data.push([]);
-  data.push(['Resumen por categoría']);
-  data.push(['Categoría', 'Total bruto', 'Descuento 1 (%)', 'Descuento 2 (%)', 'Total final (neto)']);
-
+  const data = [['Informe Consolidado'], [`Período: ${descripcionPeriodo()}`], []];
   let totalGeneral = 0;
-  CATEGORIAS.forEach((cat) => {
-    const pct1 = parseFloat(document.getElementById(`${cat.id}Pct1`)?.value) || 0;
-    const pct2 = parseFloat(document.getElementById(`${cat.id}Pct2`)?.value) || 0;
-    const totalBruto = totalBrutoPorCategoria[cat.id];
-    const { totalFinal } = calcularMontosDescuento(totalBruto, pct1, pct2);
+  let categoriaAnterior = null;
+
+  boxesActuales.forEach((box) => {
+    const grupos = agruparPorClave(box);
+
+    if (box.cat.id !== categoriaAnterior) {
+      data.push([box.cat.label]);
+      categoriaAnterior = box.cat.id;
+    }
+
+    data.push([box.centro]);
+    data.push([box.cat.columnaGrupo, 'Cantidad', 'Monto']);
+    grupos.forEach((g) => {
+      data.push([g.clave, g.cantidad, g.monto]);
+    });
+
+    const pct1 = parseFloat(document.getElementById(`${box.boxId}Pct1`)?.value) || 0;
+    const pct2 = parseFloat(document.getElementById(`${box.boxId}Pct2`)?.value) || 0;
+    const { monto1, subtotal1, monto2, totalFinal } = calcularMontosDescuento(box.totalBruto, pct1, pct2);
     totalGeneral += totalFinal;
-    data.push([cat.label, totalBruto, pct1, pct2, totalFinal]);
+
+    data.push(['Total bruto', box.totalBruto]);
+    if (pct1 > 0 || pct2 > 0) {
+      data.push([`Descuento 1 (${pct1}%)`, -monto1]);
+      data.push(['Subtotal', subtotal1]);
+      data.push([`Descuento 2 (${pct2}%)`, -monto2]);
+    }
+    data.push(['Total final (neto)', totalFinal]);
+    data.push([]);
   });
 
-  data.push([]);
   data.push(['TOTAL GENERAL (neto)', totalGeneral]);
 
   const wb = XLSX.utils.book_new();

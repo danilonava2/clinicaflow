@@ -878,7 +878,14 @@ label {
 .reporte-desglose-card .tabla-resultados td { padding: 6px 8px; }
 
 /* CUADROS DEL INFORME CONSOLIDADO */
-.consolidado-box h4 { text-align: center; }
+.consolidado-box h4 { text-align: center; margin-bottom: 2px; }
+.consolidado-centro {
+  text-align: center;
+  color: #1e40af;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
 .consolidado-cantidad {
   text-align: center;
   color: #64748b;
@@ -1244,6 +1251,7 @@ label {
 :root[data-theme="dark"] .btn-chip:hover { background: #234876; }
 
 :root[data-theme="dark"] .consolidado-bruto { color: #f1f5f9; }
+:root[data-theme="dark"] .consolidado-centro { color: #93c5fd; }
 :root[data-theme="dark"] .consolidado-cantidad { color: #94a3b8; }
 
 :root[data-theme="dark"] .reporte-total,
