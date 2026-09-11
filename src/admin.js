@@ -6,6 +6,56 @@ import { escucharTodosLosUsuarios, cambiarPlanUsuario } from './firebase/firesto
 // en firestore.rules, que es lo que realmente protege los datos).
 const ADMIN_UID = 'VJEehVVQdpVgQqd5g6X6r9xxnyr2';
 
+// Envio real de correos (sin backend/plan Blaze) via un Google Apps Script
+// propio, desplegado como Web App, que envia desde la cuenta Gmail del
+// administrador con GmailApp.sendEmail(). EMAIL_SECRET no es un secreto
+// fuerte (este archivo es publico, como cualquier JS de un sitio estatico)
+// pero evita el envio accidental/trivial por parte de terceros que no
+// hayan revisado el codigo fuente.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZ-jtWDA3gBXq-wxyOaM8yHI7_2lgVA0WdKJWt4jC6XHKh03F99FXnXsjdhKbC-vGyLg/exec';
+const EMAIL_SECRET = '49IbMngXRSWz0b2SQOWr_rsxsHC_qqoP';
+const LOGO_URL = 'https://danilonava2.github.io/clinicaflow/img/logo-transparente.png';
+
+function construirCorreoBienvenida(email) {
+  const subject = '¡Bienvenido/a a ClinicaFlow! Tu prueba Pro de 7 días está en camino 🎉';
+  const htmlBody = `
+  <div style="font-family: Segoe UI, Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #334155;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <img src="${LOGO_URL}" alt="ClinicaFlow" style="max-width: 200px;">
+    </div>
+    <p>Estimado/a usuario/a,</p>
+    <p>¡Bienvenido/a a ClinicaFlow! Nos alegra que hayas decidido probar la aplicación pensada para ayudar a profesionales de la salud como tú a llevar el control de sus ingresos de forma simple y ordenada.</p>
+    <p>Le informamos que, en los próximos minutos, la cuenta asociada a tu correo (<b>${email}</b>) será activada en la versión Pro por un periodo de prueba de 7 días. Durante este tiempo podrás acceder sin restricciones a todas las funcionalidades disponibles, con el fin de que puedas evaluar el sistema de manera integral.</p>
+    <p>Con ClinicaFlow podrás:</p>
+    <ul style="padding-left: 20px; line-height: 1.7;">
+      <li>🏥 Registrar tus atenciones por centro y previsión, todo en un solo lugar.</li>
+      <li>🕐 Llevar tus turnos, guardias y horas extra con calendario y cálculo automático.</li>
+      <li>🔪 Registrar cirugías con montos y descuentos propios.</li>
+      <li>📊 Generar reportes financieros en PDF y Excel, con calculadora de descuentos incluida.</li>
+      <li>📈 Ver un dashboard con tus ingresos, atenciones y tu mejor centro del mes.</li>
+      <li>🔄 Sincronizar todo en tiempo real entre tu celular y computador.</li>
+    </ul>
+    <p>Todo esto pensado para que dediques menos tiempo a ordenar planillas y más tiempo a lo que realmente importa: tu trabajo.</p>
+    <p>Quedamos a tu disposición para resolver cualquier consulta o inquietud que pueda surgir.</p>
+    <p>Atentamente,<br>El equipo de ClinicaFlow</p>
+    <div style="text-align: center; margin-top: 20px;">
+      <img src="${LOGO_URL}" alt="ClinicaFlow" style="max-width: 150px;">
+    </div>
+  </div>`;
+  return { subject, htmlBody };
+}
+
+async function enviarCorreoBienvenida(email) {
+  const { subject, htmlBody } = construirCorreoBienvenida(email);
+  const respuesta = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ secret: EMAIL_SECRET, to: email, subject, htmlBody })
+  });
+  const resultado = await respuesta.json();
+  if (!resultado.ok) throw new Error(resultado.error || 'Error desconocido');
+}
+
 let usuariosCache = [];
 let detenerEscuchaUsuarios = null;
 
@@ -159,6 +209,7 @@ function renderUsuarios(usuarios) {
         ${esPro ? `<button class="btn-secondary btn-quitar-plan" data-uid="${u.uid}">Quitar Pro</button>` : ''}
         <button class="btn-primary btn-activar-plan" data-uid="${u.uid}">${esPro ? 'Renovar' : 'Activar Pro'}</button>
         ${!esPro ? `<button class="admin-btn-prueba btn-prueba-plan" data-uid="${u.uid}">🎁 Prueba 7 días</button>` : ''}
+        ${!esPro ? `<button class="btn-secondary btn-enviar-correo" data-uid="${u.uid}" data-email="${u.email}">✉️ Enviar bienvenida</button>` : ''}
       </div>
     </div>`;
   });
@@ -214,6 +265,22 @@ function renderUsuarios(usuarios) {
       } catch (error) {
         alert('Error al activar la prueba: ' + error.message);
         btn.disabled = false;
+      }
+    });
+  });
+
+  contenedor.querySelectorAll('.btn-enviar-correo').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const textoOriginal = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = 'Enviando...';
+      try {
+        await enviarCorreoBienvenida(btn.dataset.email);
+        btn.innerText = '✅ Enviado';
+      } catch (error) {
+        alert('Error al enviar el correo: ' + error.message);
+        btn.disabled = false;
+        btn.innerText = textoOriginal;
       }
     });
   });
