@@ -17,7 +17,10 @@ const EMAIL_SECRET = '49IbMngXRSWz0b2SQOWr_rsxsHC_qqoP';
 const LOGO_URL = 'https://danilonava2.github.io/clinicaflow/img/logo-transparente.png';
 
 function construirCorreoBienvenida(email) {
-  const subject = '¡Bienvenido/a a ClinicaFlow! Tu prueba Pro de 7 días está en camino 🎉';
+  // El asunto es texto plano (no HTML), asi que no puede usar entidades
+  // como el cuerpo -- por eso va sin emoji, evitando el bug de Apps
+  // Script que corrompe emoji/unicode fuera del rango basico (BMP).
+  const subject = '¡Bienvenido/a a ClinicaFlow! Tu prueba Pro de 7 días está en camino';
   const htmlBody = `
   <div style="font-family: Segoe UI, Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #334155;">
     <div style="text-align: center; margin-bottom: 24px;">
@@ -28,12 +31,12 @@ function construirCorreoBienvenida(email) {
     <p>Le informamos que, en los próximos minutos, la cuenta asociada a tu correo (<b>${email}</b>) será activada en la versión Pro por un periodo de prueba de 7 días. Durante este tiempo podrás acceder sin restricciones a todas las funcionalidades disponibles, con el fin de que puedas evaluar el sistema de manera integral.</p>
     <p>Con ClinicaFlow podrás:</p>
     <ul style="padding-left: 20px; line-height: 1.7;">
-      <li>🏥 Registrar tus atenciones por centro y previsión, todo en un solo lugar.</li>
-      <li>🕐 Llevar tus turnos, guardias y horas extra con calendario y cálculo automático.</li>
-      <li>🔪 Registrar cirugías con montos y descuentos propios.</li>
-      <li>📊 Generar reportes financieros en PDF y Excel, con calculadora de descuentos incluida.</li>
-      <li>📈 Ver un dashboard con tus ingresos, atenciones y tu mejor centro del mes.</li>
-      <li>🔄 Sincronizar todo en tiempo real entre tu celular y computador.</li>
+      <li>&#127973; Registrar tus atenciones por centro y previsión, todo en un solo lugar.</li>
+      <li>&#128336; Llevar tus turnos, guardias y horas extra con calendario y cálculo automático.</li>
+      <li>&#128298; Registrar cirugías con montos y descuentos propios.</li>
+      <li>&#128202; Generar reportes financieros en PDF y Excel, con calculadora de descuentos incluida.</li>
+      <li>&#128200; Ver un dashboard con tus ingresos, atenciones y tu mejor centro del mes.</li>
+      <li>&#128260; Sincronizar todo en tiempo real entre tu celular y computador.</li>
     </ul>
     <p>Todo esto pensado para que dediques menos tiempo a ordenar planillas y más tiempo a lo que realmente importa: tu trabajo.</p>
     <p>Quedamos a tu disposición para resolver cualquier consulta o inquietud que pueda surgir.</p>
