@@ -52,13 +52,14 @@ function agruparPorClave(rows, obtenerClave, fallback = 'Sin datos') {
 function renderDesgloseTabla(titulo, grupos) {
   let html = `<div class="reporte-desglose-card">
     <h4>${titulo}</h4>
-    <table class="tabla-resultados">
-      <thead><tr><th>Nombre</th><th>Atenciones</th><th>Monto</th></tr></thead>
-      <tbody>`;
+    <div class="previsiones-list">`;
   grupos.forEach(([clave, { atenciones, monto }]) => {
-    html += `<tr><td>${escapeHtml(clave)}</td><td>${atenciones}</td><td>${formatearMonto(monto)}</td></tr>`;
+    html += `<div class="prevision-item">
+      <span>${escapeHtml(clave)}</span>
+      <span style="white-space:nowrap; text-align:right; margin-left:10px;">${atenciones} aten. · <b>${formatearMonto(monto)}</b></span>
+    </div>`;
   });
-  html += '</tbody></table></div>';
+  html += '</div></div>';
   return html;
 }
 
